@@ -1,8 +1,8 @@
-# resi
+# rfesi
 
-![CI](https://github.com/Celeo/resi/workflows/CI/badge.svg?branch=master)
-![Crates.io](https://img.shields.io/crates/v/resi.svg)
-![License](https://img.shields.io/crates/l/resi)
+![CI](https://github.com/Celeo/rfesi/workflows/CI/badge.svg?branch=master)
+![Crates.io](https://img.shields.io/crates/v/rfesi.svg)
+![License](https://img.shields.io/crates/l/rfesi)
 
 Rust API for the EVE online ESI
 
@@ -26,8 +26,8 @@ TBD
 ### Steps
 
 ```sh
-git clone https://github.com/Celeo/resi
-cd resi
+git clone https://github.com/Celeo/rfesi
+cd rfesi
 cargo test
 ```
 

@@ -3,8 +3,6 @@
 //! [ESI] bindings in Rust.
 //!
 //! [ESI]: http://esi.evetech.net/
-//!
-//!
 
 #![deny(clippy::all)]
 
@@ -13,6 +11,8 @@ use std::time::Duration;
 use thiserror::Error;
 
 /// Struct to interact with the ESI.
+///
+/// Construct an instance of this struct using [`EsiBuilder`](./struct.EsiBuilder.html).
 #[derive(Debug)]
 pub struct Esi {
     version: String,
@@ -27,6 +27,18 @@ pub struct Esi {
 }
 
 /// Builder for the `Esi` struct.
+///
+/// # Example
+/// ```rust
+/// # use rfesi::EsiBuilder;
+/// let esi = EsiBuilder::new()
+///     .user_agent("some user agent")
+///     .client_id("your_client_id")
+///     .client_secret("your_client_secret")
+///     .callback_url("your_callback_url")
+///     .build()
+///     .unwrap();
+/// ```
 #[derive(Clone, Debug, Default)]
 pub struct EsiBuilder {
     version: Option<String>,
@@ -128,9 +140,9 @@ impl EsiBuilder {
 
     /// Construct the `Esi` instance, consuming the builder.
     ///
-    /// There are a few things that could go wrong:
-    ///     - not setting one of the mandatory fields
-    ///     - providing a user agent that is not a valid HTTP header value
+    /// There are a few things that could go wrong, like
+    /// not setting one of the mandatory fields or providing a user
+    /// agent that is not a valid HTTP header value.
     pub fn build(self) -> Result<Esi, EsiError> {
         let client = self.construct_client()?;
         let e = Esi {
