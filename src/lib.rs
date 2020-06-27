@@ -1,1 +1,3 @@
+#![deny(clippy::all)]
+
 // TODO
