@@ -112,14 +112,14 @@ impl EsiBuilder {
     fn construct_client(&self) -> Result<Client, EsiError> {
         let http_timeout = self
             .http_timeout
-            .map(|u| Duration::from_millis(u))
-            .unwrap_or(Duration::from_secs(60));
+            .map(Duration::from_millis)
+            .unwrap_or_else(|| Duration::from_secs(60));
         let headers = {
             let mut map = header::HeaderMap::new();
             let user_agent = &self
                 .user_agent
                 .as_ref()
-                .ok_or(EsiError::EmptyClientValue("user_agent".to_owned()))?
+                .ok_or_else(|| EsiError::EmptyClientValue("user_agent".to_owned()))?
                 .to_owned();
             map.insert(
                 header::USER_AGENT,
@@ -146,16 +146,16 @@ impl EsiBuilder {
     pub fn build(self) -> Result<Esi, EsiError> {
         let client = self.construct_client()?;
         let e = Esi {
-            version: self.version.unwrap_or("latest".to_owned()),
+            version: self.version.unwrap_or_else(|| "latest".to_owned()),
             client_id: self
                 .client_id
-                .ok_or(EsiError::EmptyClientValue("client_id".to_owned()))?,
+                .ok_or_else(|| EsiError::EmptyClientValue("client_id".to_owned()))?,
             client_secret: self
                 .client_secret
-                .ok_or(EsiError::EmptyClientValue("client_secret".to_owned()))?,
+                .ok_or_else(|| EsiError::EmptyClientValue("client_secret".to_owned()))?,
             callback_url: self
                 .callback_url
-                .ok_or(EsiError::EmptyClientValue("callback_url".to_owned()))?,
+                .ok_or_else(|| EsiError::EmptyClientValue("callback_url".to_owned()))?,
             access_token: self.access_token,
             access_expiration: self.access_expiration,
             refresh_token: self.refresh_token,
