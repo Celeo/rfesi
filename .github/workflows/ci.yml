@@ -30,6 +30,6 @@ jobs:
     - name: Install clippy
       run: rustup component add clippy
     - name: Run tests
-      run: cargo test --verbose
+      run: cargo +stable test --verbose
     - name: Run clippy
-      run: cargo clippy -- -D warnings
+      run: cargo +nightly clippy -- -D warnings
