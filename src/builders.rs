@@ -1,6 +1,6 @@
 //! Builders
 
-use crate::{client::Esi, errors::EsiError};
+use crate::{Esi, EsiError};
 use reqwest::{header, Client};
 use std::time::Duration;
 
