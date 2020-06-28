@@ -7,10 +7,10 @@
 #![deny(clippy::all)]
 
 mod builders;
-mod client;
+pub mod client;
 mod errors;
 mod models;
 
 pub use builders::EsiBuilder;
-pub use client::Esi;
+pub use client::{Esi, UrlBase};
 pub use errors::EsiError;

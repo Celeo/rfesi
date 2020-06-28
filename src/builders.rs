@@ -37,7 +37,7 @@ impl EsiBuilder {
         Default::default()
     }
 
-    /// Set the version of the ESI to use.
+    /// Set the version of ESI to use.
     ///
     /// Will default to `"latest"` if not set.
     pub fn version(mut self, val: &str) -> Self {

@@ -11,6 +11,19 @@ pub(crate) struct AuthenticateResponse {
     pub(crate) refresh_token: Option<String>,
 }
 
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "PascalCase")]
+pub struct WhoAmIResponse {
+    #[serde(rename = "CharacterID")]
+    character_id: u64,
+    character_name: String,
+    expires_on: String,
+    scopes: String,
+    token_type: String,
+    character_owner_hash: String,
+    intellectual_property: String,
+}
+
 #[cfg(test)]
 mod tests {
     use super::AuthenticateResponse;
