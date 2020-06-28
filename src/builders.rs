@@ -23,6 +23,7 @@ pub struct EsiBuilder {
     client_id: Option<String>,
     client_secret: Option<String>,
     callback_url: Option<String>,
+    scope: Option<String>,
     access_token: Option<String>,
     access_expiration: Option<u64>,
     refresh_token: Option<String>,
@@ -59,6 +60,11 @@ impl EsiBuilder {
         self
     }
 
+    pub fn scope(mut self, val: &str) -> Self {
+        self.scope = Some(val.to_owned());
+        self
+    }
+
     pub fn access_token(mut self, val: Option<&str>) -> Self {
         self.access_token = val.map(|v| v.to_owned());
         self
@@ -87,7 +93,7 @@ impl EsiBuilder {
         self
     }
 
-    fn construct_client(&self, _access_token: Option<&str>) -> Result<Client, EsiError> {
+    fn construct_client(&self) -> Result<Client, EsiError> {
         let http_timeout = self
             .http_timeout
             .map(Duration::from_millis)
@@ -107,9 +113,6 @@ impl EsiBuilder {
                 header::ACCEPT,
                 header::HeaderValue::from_static("application/json"),
             );
-
-            // TODO insert token header if present
-
             map
         };
         let client = Client::builder()
@@ -125,7 +128,7 @@ impl EsiBuilder {
     /// not setting one of the mandatory fields or providing a user
     /// agent that is not a valid HTTP header value.
     pub fn build(self) -> Result<Esi, EsiError> {
-        let client = self.construct_client(None)?;
+        let client = self.construct_client()?;
         let e = Esi {
             version: self.version.unwrap_or_else(|| "latest".to_owned()),
             client_id: self
@@ -137,6 +140,7 @@ impl EsiBuilder {
             callback_url: self
                 .callback_url
                 .ok_or_else(|| EsiError::EmptyClientValue("callback_url".to_owned()))?,
+            scope: self.scope.unwrap_or_else(|| "".to_owned()),
             access_token: self.access_token,
             access_expiration: self.access_expiration,
             refresh_token: self.refresh_token,
