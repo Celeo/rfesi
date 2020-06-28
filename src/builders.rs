@@ -176,6 +176,6 @@ mod tests {
         let res = EsiBuilder::new().build();
         assert!(res.is_err());
         let s = format!("{}", res.unwrap_err());
-        assert_eq!(s, "Missing `Esi` struct value 'user_agent'");
+        assert_eq!(s, "Missing required builder struct value 'user_agent'");
     }
 }
