@@ -18,7 +18,7 @@ const TOKEN_URL: &str = "https://login.eveonline.com/oauth/token";
 /// Which base URL to start with - the public URL for unauthenticated
 /// calls, or the authenticated URL for making calls to endpoints that
 /// require an access token.
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum UrlBase {
     Public,
     Authenticated,
@@ -137,9 +137,12 @@ impl Esi {
         query: Option<&[(&str, &str)]>,
     ) -> Result<T, EsiError> {
         debug!(
-            "Making {} request to {} with query args {:?}",
-            method, endpoint, query
+            "Making {} request to {:?}{} with query {:?}",
+            method, url_base, endpoint, query
         );
+        if url_base == UrlBase::Authenticated && self.access_token.is_none() {
+            return Err(EsiError::MissingAuthentication);
+        }
         let headers = {
             let mut map = HeaderMap::new();
             // The 'user-agent' and 'content-type' headers are set in the default headers

@@ -5,7 +5,7 @@ use thiserror::Error;
 /// Errors that can occur when dealing with ESI.
 #[derive(Debug, Error)]
 pub enum EsiError {
-    #[error("Missing `Esi` struct value '{0}'")]
+    #[error("Missing required builder struct value '{0}'")]
     EmptyClientValue(String),
     #[error("Invalid HTTP status code received: {0}")]
     InvalidStatusCode(u16),
@@ -15,4 +15,6 @@ pub enum EsiError {
     ReqwestError(#[from] reqwest::Error),
     #[error("Invalid HTTP method")]
     HttpMethodError(#[from] http::method::InvalidMethod),
+    #[error("This endpoint requires an access token")]
+    MissingAuthentication,
 }
