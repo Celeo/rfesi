@@ -8,7 +8,6 @@ use std::time::Duration;
 ///
 /// # Example
 /// ```rust
-/// # async fn run() {
 /// # use rfesi::EsiBuilder;
 /// let mut esi = EsiBuilder::new()
 ///     .user_agent("some user agent")
@@ -16,9 +15,7 @@ use std::time::Duration;
 ///     .client_secret("your_client_secret")
 ///     .callback_url("your_callback_url")
 ///     .build()
-///     .await
 ///     .unwrap();
-/// # }
 /// ```
 #[derive(Clone, Debug, Default)]
 pub struct EsiBuilder {
@@ -130,8 +127,8 @@ impl EsiBuilder {
     /// There are a few things that could go wrong, like
     /// not setting one of the mandatory fields or providing a user
     /// agent that is not a valid HTTP header value.
-    pub async fn build(self) -> Result<Esi, EsiError> {
-        Esi::from_builder(self).await
+    pub fn build(self) -> Result<Esi, EsiError> {
+        Esi::from_builder(self)
     }
 }
 
@@ -139,15 +136,14 @@ impl EsiBuilder {
 mod tests {
     use super::EsiBuilder;
 
-    #[tokio::test]
-    async fn test_builder_valid() {
+    #[test]
+    fn test_builder_valid() {
         let b = EsiBuilder::new()
             .client_id("a")
             .client_secret("b")
             .callback_url("c")
             .user_agent("d")
             .build()
-            .await
             .unwrap();
 
         assert_eq!(b.client_id, "a");
@@ -157,9 +153,9 @@ mod tests {
         assert_eq!(b.access_token, None);
     }
 
-    #[tokio::test]
-    async fn test_builder_missing_value() {
-        let res = EsiBuilder::new().build().await;
+    #[test]
+    fn test_builder_missing_value() {
+        let res = EsiBuilder::new().build();
         assert!(res.is_err());
         let s = format!("{}", res.unwrap_err());
         assert_eq!(s, "Missing required builder struct value 'user_agent'");

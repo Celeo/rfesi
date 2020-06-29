@@ -9,6 +9,7 @@
 mod builders;
 pub mod client;
 mod errors;
+pub mod groups;
 mod models;
 
 pub use builders::EsiBuilder;

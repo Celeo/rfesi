@@ -17,4 +17,8 @@ pub enum EsiError {
     HttpMethodError(#[from] http::method::InvalidMethod),
     #[error("This endpoint requires an access token")]
     MissingAuthentication,
+    #[error("Could not resolve operationId '{0}' to a URL path")]
+    UnknownOperationID(String),
+    #[error("Error occurred while parsing the Swagger spec at: {0}")]
+    FailedSpecParse(String),
 }
