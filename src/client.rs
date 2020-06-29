@@ -49,9 +49,12 @@ pub struct Esi {
     pub(crate) client_secret: String,
     pub(crate) callback_url: String,
     pub(crate) scope: String,
-    pub(crate) access_token: Option<String>,
-    pub(crate) access_expiration: Option<u64>,
-    pub(crate) refresh_token: Option<String>,
+    /// The access token from ESI, if set.
+    pub access_token: Option<String>,
+    /// The expiration timestamp of the access token.
+    pub access_expiration: Option<u64>,
+    /// The refresh token from ESI, if set.
+    pub refresh_token: Option<String>,
     /// HTTP client
     pub(crate) client: Client,
     pub(crate) spec: Option<Value>,
@@ -362,7 +365,8 @@ impl Esi {
                     None => continue,
                 };
                 if operation_id == op_id {
-                    return Ok(path_str.to_owned());
+                    // the paths contain a leading slash, so strip it
+                    return Ok(path_str.chars().skip(1).collect());
                 }
             }
         }
