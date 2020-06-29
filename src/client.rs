@@ -1,19 +1,21 @@
 //! Main logic
 
-use crate::{models::auth, EsiError};
+use crate::{models::auth, EsiBuilder, EsiError};
 use log::debug;
 use reqwest::{
     header::{self, HeaderMap, HeaderValue},
     Client, Method,
 };
 use serde::de::DeserializeOwned;
-use serde_json::json;
+use serde_json::{json, Value};
 use std::str::FromStr;
 
 const BASE_URL: &str = "https://esi.evetech.net/";
 const OAUTH_URL: &str = "https://login.eveonline.com/oauth/";
 const AUTHORIZE_URL: &str = "https://login.eveonline.com/oauth/authorize";
 const TOKEN_URL: &str = "https://login.eveonline.com/oauth/token";
+const SPEC_URL_START: &str = "https://esi.evetech.net/_";
+const SPEC_URL_END: &str = "/swagger.json";
 
 /// Which base URL to start with - the public URL for unauthenticated
 /// calls, or the authenticated URL for making calls to endpoints that
@@ -39,9 +41,49 @@ pub struct Esi {
     pub(crate) refresh_token: Option<String>,
     /// HTTP client
     pub(crate) client: Client,
+    pub(crate) spec: Value,
 }
 
 impl Esi {
+    /// Consume the builder, creating an instance of this struct.
+    pub(crate) async fn from_builder(builder: EsiBuilder) -> Result<Self, EsiError> {
+        let client = builder.construct_client()?;
+        let version = builder.version.unwrap_or_else(|| "latest".to_owned());
+        let spec = Esi::get_spec(&client, &version).await?;
+        let e = Esi {
+            version,
+            client_id: builder
+                .client_id
+                .ok_or_else(|| EsiError::EmptyClientValue("client_id".to_owned()))?,
+            client_secret: builder
+                .client_secret
+                .ok_or_else(|| EsiError::EmptyClientValue("client_secret".to_owned()))?,
+            callback_url: builder
+                .callback_url
+                .ok_or_else(|| EsiError::EmptyClientValue("callback_url".to_owned()))?,
+            scope: builder.scope.unwrap_or_else(|| "".to_owned()),
+            access_token: builder.access_token,
+            access_expiration: builder.access_expiration,
+            refresh_token: builder.refresh_token,
+            client,
+            spec,
+        };
+        Ok(e)
+    }
+
+    /// Get the Swagger spec from ESI.
+    pub(crate) async fn get_spec(client: &Client, version: &str) -> Result<Value, EsiError> {
+        let resp = client
+            .get(&format!("{}{}{}", SPEC_URL_START, version, SPEC_URL_END))
+            .send()
+            .await?;
+        if !resp.status().is_success() {
+            return Err(EsiError::InvalidStatusCode(resp.status().as_u16()));
+        }
+        let data: Value = resp.json().await?;
+        Ok(data)
+    }
+
     pub fn get_authorize_url(&self) -> String {
         format!(
             "{}?response_type=code&redirect_uri={}&client_id={}&scope={}",
@@ -74,6 +116,7 @@ impl Esi {
     /// #     .client_secret("your_client_secret")
     /// #     .callback_url("your_callback_url")
     /// #     .build()
+    /// #     .await
     /// #     .unwrap();
     /// esi.authenticate("abcdef").await.unwrap();
     /// # }
@@ -123,6 +166,7 @@ impl Esi {
     /// #     .client_secret("your_client_secret")
     /// #     .callback_url("your_callback_url")
     /// #     .build()
+    /// #     .await
     /// #     .unwrap();
     /// #[derive(Deserialize)]
     /// struct ReturnedData {}

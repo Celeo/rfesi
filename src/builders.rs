@@ -8,27 +8,30 @@ use std::time::Duration;
 ///
 /// # Example
 /// ```rust
+/// # async fn run() {
 /// # use rfesi::EsiBuilder;
-/// let esi = EsiBuilder::new()
+/// let mut esi = EsiBuilder::new()
 ///     .user_agent("some user agent")
 ///     .client_id("your_client_id")
 ///     .client_secret("your_client_secret")
 ///     .callback_url("your_callback_url")
 ///     .build()
+///     .await
 ///     .unwrap();
+/// # }
 /// ```
 #[derive(Clone, Debug, Default)]
 pub struct EsiBuilder {
-    version: Option<String>,
-    client_id: Option<String>,
-    client_secret: Option<String>,
-    callback_url: Option<String>,
-    scope: Option<String>,
-    access_token: Option<String>,
-    access_expiration: Option<u64>,
-    refresh_token: Option<String>,
-    user_agent: Option<String>,
-    http_timeout: Option<u64>,
+    pub(crate) version: Option<String>,
+    pub(crate) client_id: Option<String>,
+    pub(crate) client_secret: Option<String>,
+    pub(crate) callback_url: Option<String>,
+    pub(crate) scope: Option<String>,
+    pub(crate) access_token: Option<String>,
+    pub(crate) access_expiration: Option<u64>,
+    pub(crate) refresh_token: Option<String>,
+    pub(crate) user_agent: Option<String>,
+    pub(crate) http_timeout: Option<u64>,
 }
 
 impl EsiBuilder {
@@ -93,7 +96,7 @@ impl EsiBuilder {
         self
     }
 
-    fn construct_client(&self) -> Result<Client, EsiError> {
+    pub(crate) fn construct_client(&self) -> Result<Client, EsiError> {
         let http_timeout = self
             .http_timeout
             .map(Duration::from_millis)
@@ -122,31 +125,13 @@ impl EsiBuilder {
         Ok(client)
     }
 
-    /// Construct the `Esi` instance, consuming the builder.
+    /// Construct the `Esi` instance.
     ///
     /// There are a few things that could go wrong, like
     /// not setting one of the mandatory fields or providing a user
     /// agent that is not a valid HTTP header value.
-    pub fn build(self) -> Result<Esi, EsiError> {
-        let client = self.construct_client()?;
-        let e = Esi {
-            version: self.version.unwrap_or_else(|| "latest".to_owned()),
-            client_id: self
-                .client_id
-                .ok_or_else(|| EsiError::EmptyClientValue("client_id".to_owned()))?,
-            client_secret: self
-                .client_secret
-                .ok_or_else(|| EsiError::EmptyClientValue("client_secret".to_owned()))?,
-            callback_url: self
-                .callback_url
-                .ok_or_else(|| EsiError::EmptyClientValue("callback_url".to_owned()))?,
-            scope: self.scope.unwrap_or_else(|| "".to_owned()),
-            access_token: self.access_token,
-            access_expiration: self.access_expiration,
-            refresh_token: self.refresh_token,
-            client,
-        };
-        Ok(e)
+    pub async fn build(self) -> Result<Esi, EsiError> {
+        Esi::from_builder(self).await
     }
 }
 
@@ -154,14 +139,15 @@ impl EsiBuilder {
 mod tests {
     use super::EsiBuilder;
 
-    #[test]
-    fn test_builder_valid() {
+    #[tokio::test]
+    async fn test_builder_valid() {
         let b = EsiBuilder::new()
             .client_id("a")
             .client_secret("b")
             .callback_url("c")
             .user_agent("d")
             .build()
+            .await
             .unwrap();
 
         assert_eq!(b.client_id, "a");
@@ -171,9 +157,9 @@ mod tests {
         assert_eq!(b.access_token, None);
     }
 
-    #[test]
-    fn test_builder_missing_value() {
-        let res = EsiBuilder::new().build();
+    #[tokio::test]
+    async fn test_builder_missing_value() {
+        let res = EsiBuilder::new().build().await;
         assert!(res.is_err());
         let s = format!("{}", res.unwrap_err());
         assert_eq!(s, "Missing required builder struct value 'user_agent'");
