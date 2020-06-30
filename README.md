@@ -3,7 +3,7 @@
 [![CI](https://github.com/Celeo/rfesi/workflows/CI/badge.svg?branch=master)](https://github.com/celeo/rfesi/actions?query=workflow%3ACI)
 [![Crates.io](https://img.shields.io/crates/v/rfesi.svg)](https://crates.io/crates/rfesi)
 [![Docs.rs](https://docs.rs/rfesi/badge.svg)](https://docs.rs/rfesi)
-![License](https://img.shields.io/crates/l/rfesi)
+[![License](https://img.shields.io/crates/l/rfesi)](https://github.com/Celeo/rfesi/blob/master/Cargo.toml#L10)
 
 Rust API for the EVE online ESI
 
