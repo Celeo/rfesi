@@ -11,9 +11,9 @@
 //! # Example of the authorization flow
 //!
 //! ```rust,no_run
-//! use rfesi::{Esi, EsiBuilder};
+//! use rfesi::{Esi, EsiBuilder, EsiError};
 //!
-//! fn create_esi() -> Esi {
+//! fn create_esi() -> Result<Esi, EsiError> {
 //!     // Create a new struct from the builder. These parameters
 //!     // all come from your third-party app on the developers site.
 //!     EsiBuilder::new()
@@ -22,7 +22,6 @@
 //!         .client_secret("your_client_secret")
 //!         .callback_url("your_callback_url")
 //!         .build()
-//!         .unwrap()
 //! }
 //!
 //! fn get_authorize_url(esi: &Esi) -> String {
@@ -31,7 +30,7 @@
 //!     esi.get_authorize_url()
 //! }
 //!
-//! async fn authenticate_user(esi: &mut Esi, code: &str) {
+//! async fn authenticate_user(esi: &mut Esi, code: &str) -> Result<(), EsiError> {
 //!     // The `code` value here comes from the URL parameters your service
 //!     // is sent following a user's successful SSO.
 //!     //
@@ -44,7 +43,8 @@
 //!     //
 //!     // Once the instance has the auth information, you can use it to make
 //!     // authenticated requests to ESI for the user.
-//!     esi.authenticate(code).await.unwrap();
+//!     esi.authenticate(code).await?;
+//!     Ok(())
 //! }
 //! ```
 //!
