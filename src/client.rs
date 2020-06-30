@@ -1,6 +1,6 @@
 //! Main logic
 
-use crate::{groups::AllianceGroup, models::auth, EsiBuilder, EsiError};
+use crate::{groups::*, models::auth, EsiBuilder, EsiError};
 use log::{debug, error};
 use reqwest::{
     header::{self, HeaderMap, HeaderValue},
@@ -21,7 +21,7 @@ const SPEC_URL_END: &str = "/swagger.json";
 /// calls, or the authenticated URL for making calls to endpoints that
 /// require an access token.
 #[derive(Debug, PartialEq)]
-pub enum UrlBase {
+pub enum RequestType {
     Public,
     Authenticated,
 }
@@ -42,7 +42,7 @@ pub enum UrlBase {
 ///     .build()
 ///     .unwrap();
 /// ```
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Esi {
     pub(crate) version: String,
     pub(crate) client_id: String,
@@ -221,7 +221,7 @@ impl Esi {
     /// ```rust,no_run
     /// # async fn run() {
     /// # use serde::Deserialize;
-    /// # use rfesi::{EsiBuilder, UrlBase};
+    /// # use rfesi::{EsiBuilder, RequestType};
     /// # let mut esi = EsiBuilder::new()
     /// #     .user_agent("some user agent")
     /// #     .client_id("your_client_id")
@@ -231,13 +231,13 @@ impl Esi {
     /// #     .unwrap();
     /// #[derive(Deserialize)]
     /// struct ReturnedData {}
-    /// let data: ReturnedData = esi.query("GET", UrlBase::Public, "abc", None).await.unwrap();
+    /// let data: ReturnedData = esi.query("GET", RequestType::Public, "abc", None).await.unwrap();
     /// # }
     /// ```
     pub async fn query<T: DeserializeOwned>(
         &self,
         method: &str,
-        url_base: UrlBase,
+        url_base: RequestType,
         endpoint: &str,
         query: Option<&[(&str, &str)]>,
     ) -> Result<T, EsiError> {
@@ -245,7 +245,7 @@ impl Esi {
             "Making {} request to {:?}{} with query {:?}",
             method, url_base, endpoint, query
         );
-        if url_base == UrlBase::Authenticated && self.access_token.is_none() {
+        if url_base == RequestType::Authenticated && self.access_token.is_none() {
             return Err(EsiError::MissingAuthentication);
         }
         // TODO caching
@@ -268,8 +268,8 @@ impl Esi {
         let url = format!(
             "{}{}",
             match url_base {
-                UrlBase::Public => BASE_URL,
-                UrlBase::Authenticated => OAUTH_URL,
+                RequestType::Public => BASE_URL,
+                RequestType::Authenticated => OAUTH_URL,
             },
             endpoint
         );
@@ -323,7 +323,7 @@ impl Esi {
     /// ```
     pub async fn try_get_endpoint_for_op_id(&mut self, op_id: &str) -> Result<String, EsiError> {
         if self.spec.is_none() {
-            debug!("Spec is None, must fetch before looking up op_id");
+            debug!("Spec is `None`; must fetch before looking up op_id");
             self.update_spec().await?;
         }
         self.get_endpoint_for_op_id(op_id)
@@ -378,12 +378,167 @@ impl Esi {
 
     /// Gets information on the currently-authenticated user.
     pub async fn get_whoami_info(&self) -> Result<auth::WhoAmIResponse, EsiError> {
-        self.query("GET", UrlBase::Authenticated, "verify", None)
+        self.query("GET", RequestType::Authenticated, "verify", None)
             .await
     }
 
-    /// Get endpoints under the "Alliance" group in ESI.
-    pub fn alliances(&self) -> AllianceGroup {
+    /// Call endpoints under the "alliance" group in ESI.
+    pub fn group_alliance(&self) -> AllianceGroup {
         AllianceGroup { esi: self }
+    }
+
+    /// Call endpoints under the "Assets" group in ESI.
+    pub fn group_assets(&self) -> AssetsGroup {
+        AssetsGroup { esi: self }
+    }
+
+    /// Call endpoints under the "Bookmarks" group in ESI.
+    pub fn group_bookmarks(&self) -> BookmarksGroup {
+        BookmarksGroup { esi: self }
+    }
+
+    /// Call endpoints under the "Calendar" group in ESI.
+    pub fn group_calendar(&self) -> CalendarGroup {
+        CalendarGroup { esi: self }
+    }
+
+    /// Call endpoints under the "Character" group in ESI.
+    pub fn group_character(&self) -> CharacterGroup {
+        CharacterGroup { esi: self }
+    }
+
+    /// Call endpoints under the "Clones" group in ESI.
+    pub fn group_clones(&self) -> ClonesGroup {
+        ClonesGroup { esi: self }
+    }
+
+    /// Call endpoints under the "Contacts" group in ESI.
+    pub fn group_contacts(&self) -> ContactsGroup {
+        ContactsGroup { esi: self }
+    }
+
+    /// Call endpoints under the "Contracts" group in ESI.
+    pub fn group_contracts(&self) -> ContractsGroup {
+        ContractsGroup { esi: self }
+    }
+
+    /// Call endpoints under the "Corporation" group in ESI.
+    pub fn group_corporation(&self) -> CorporationGroup {
+        CorporationGroup { esi: self }
+    }
+
+    /// Call endpoints under the "Dogma" group in ESI.
+    pub fn group_dogma(&self) -> DogmaGroup {
+        DogmaGroup { esi: self }
+    }
+
+    /// Call endpoints under the "FactionWarfare" group in ESI.
+    pub fn group_faction_warfare(&self) -> FactionWarfareGroup {
+        FactionWarfareGroup { esi: self }
+    }
+
+    /// Call endpoints under the "Fittings" group in ESI.
+    pub fn group_fittings(&self) -> FittingsGroup {
+        FittingsGroup { esi: self }
+    }
+
+    /// Call endpoints under the "Fleets" group in ESI.
+    pub fn group_fleets(&self) -> FleetsGroup {
+        FleetsGroup { esi: self }
+    }
+
+    /// Call endpoints under the "Incursions" group in ESI.
+    pub fn group_incursions(&self) -> IncursionsGroup {
+        IncursionsGroup { esi: self }
+    }
+
+    /// Call endpoints under the "Industry" group in ESI.
+    pub fn group_industry(&self) -> IndustryGroup {
+        IndustryGroup { esi: self }
+    }
+
+    /// Call endpoints under the "Insurance" group in ESI.
+    pub fn group_insurance(&self) -> InsuranceGroup {
+        InsuranceGroup { esi: self }
+    }
+
+    /// Call endpoints under the "Killmails" group in ESI.
+    pub fn group_killmails(&self) -> KillmailsGroup {
+        KillmailsGroup { esi: self }
+    }
+
+    /// Call endpoints under the "Location" group in ESI.
+    pub fn group_location(&self) -> LocationGroup {
+        LocationGroup { esi: self }
+    }
+
+    /// Call endpoints under the "Loyalty" group in ESI.
+    pub fn group_loyalty(&self) -> LoyaltyGroup {
+        LoyaltyGroup { esi: self }
+    }
+
+    /// Call endpoints under the "Mail" group in ESI.
+    pub fn group_mail(&self) -> MailGroup {
+        MailGroup { esi: self }
+    }
+
+    /// Call endpoints under the "Market" group in ESI.
+    pub fn group_market(&self) -> MarketGroup {
+        MarketGroup { esi: self }
+    }
+
+    /// Call endpoints under the "Opportunities" group in ESI.
+    pub fn group_opportunities(&self) -> OpportunitiesGroup {
+        OpportunitiesGroup { esi: self }
+    }
+
+    /// Call endpoints under the "PlanetaryInteraction" group in ESI.
+    pub fn group_planetary_interaction(&self) -> PlanetaryInteractionGroup {
+        PlanetaryInteractionGroup { esi: self }
+    }
+
+    /// Call endpoints under the "Routes" group in ESI.
+    pub fn group_routes(&self) -> RoutesGroup {
+        RoutesGroup { esi: self }
+    }
+
+    /// Call endpoints under the "Search" group in ESI.
+    pub fn group_search(&self) -> SearchGroup {
+        SearchGroup { esi: self }
+    }
+
+    /// Call endpoints under the "Skills" group in ESI.
+    pub fn group_skills(&self) -> SkillsGroup {
+        SkillsGroup { esi: self }
+    }
+
+    /// Call endpoints under the "Sovereignty" group in ESI.
+    pub fn group_sovereignty(&self) -> SovereigntyGroup {
+        SovereigntyGroup { esi: self }
+    }
+
+    /// Call endpoints under the "Status" group in ESI.
+    pub fn group_status(&self) -> StatusGroup {
+        StatusGroup { esi: self }
+    }
+
+    /// Call endpoints under the "Universe" group in ESI.
+    pub fn group_universe(&self) -> UniverseGroup {
+        UniverseGroup { esi: self }
+    }
+
+    /// Call endpoints under the "UserInterface" group in ESI.
+    pub fn group_user_interface(&self) -> UserInterfaceGroup {
+        UserInterfaceGroup { esi: self }
+    }
+
+    /// Call endpoints under the "Wallet" group in ESI.
+    pub fn group_wallet(&self) -> WalletGroup {
+        WalletGroup { esi: self }
+    }
+
+    /// Call endpoints under the "Wars" group in ESI.
+    pub fn group_wars(&self) -> WarsGroup {
+        WarsGroup { esi: self }
     }
 }

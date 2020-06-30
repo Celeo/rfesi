@@ -1,4 +1,4 @@
-use crate::{Esi, EsiError, UrlBase};
+use crate::{Esi, EsiError, RequestType};
 use serde::Deserialize;
 
 pub struct AllianceGroup<'a> {
@@ -19,7 +19,9 @@ impl<'a> AllianceGroup<'a> {
     /// Get a list of alliance IDs.
     pub async fn list_ids(&self) -> Result<Vec<u64>, EsiError> {
         let path = self.esi.get_endpoint_for_op_id("get_alliances")?;
-        self.esi.query("GET", UrlBase::Public, &path, None).await
+        self.esi
+            .query("GET", RequestType::Public, &path, None)
+            .await
     }
 
     /// Get public information about an alliance by ID.
@@ -28,6 +30,8 @@ impl<'a> AllianceGroup<'a> {
             .esi
             .get_endpoint_for_op_id("get_alliances_alliance_id")?;
         let path = path.replace("{alliance_id}", &id.to_string());
-        self.esi.query("GET", UrlBase::Public, &path, None).await
+        self.esi
+            .query("GET", RequestType::Public, &path, None)
+            .await
     }
 }
