@@ -1,7 +1,8 @@
 # rfesi
 
-![CI](https://github.com/Celeo/rfesi/workflows/CI/badge.svg?branch=master)
-![Crates.io](https://img.shields.io/crates/v/rfesi.svg)
+[![CI](https://github.com/Celeo/rfesi/workflows/CI/badge.svg?branch=master)](https://github.com/celeo/rfesi/actions?query=workflow%3ACI)
+[![Crates.io](https://img.shields.io/crates/v/rfesi.svg)](https://crates.io/crates/rfesi)
+[![Docs.rs](https://docs.rs/rfesi/badge.svg)](https://docs.rs/rfesi)
 ![License](https://img.shields.io/crates/l/rfesi)
 
 Rust API for the EVE online ESI
@@ -12,7 +13,7 @@ Add the latest version to your `Cargo.toml`.
 
 ## Using
 
-TBD
+See [the docs](https://docs.rs/rfesi).
 
 ## Developing
 
@@ -30,6 +31,8 @@ git clone https://github.com/Celeo/rfesi
 cd rfesi
 cargo test
 ```
+
+If you have [Just](https://github.com/casey/just), then running `just` in the project will check for compilation and clippy violations.
 
 ## License
 
