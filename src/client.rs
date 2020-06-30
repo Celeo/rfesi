@@ -51,7 +51,7 @@ pub struct Esi {
     pub(crate) scope: String,
     /// The access token from ESI, if set.
     pub access_token: Option<String>,
-    /// The expiration timestamp of the access token.
+    /// The expiration timestamp of the access token, if set.
     pub access_expiration: Option<u64>,
     /// The refresh token from ESI, if set.
     pub refresh_token: Option<String>,
@@ -253,7 +253,7 @@ impl Esi {
             let mut map = HeaderMap::new();
             // The 'user-agent' and 'content-type' headers are set in the default headers
             // from the builder, so all that's required here is to set the authorization
-            // header, if present in the struct's data.
+            // header, if present.
             match &self.access_token {
                 Some(at) => {
                     map.insert(
@@ -315,7 +315,10 @@ impl Esi {
     /// #     .callback_url("your_callback_url")
     /// #     .build()
     /// #     .unwrap();
-    /// let endpoint = esi.try_get_endpoint_for_op_id("get_alliances_alliance_id_contacts_labels").await.unwrap();
+    /// let endpoint = esi
+    ///     .try_get_endpoint_for_op_id("get_alliances_alliance_id_contacts_labels")
+    ///     .await
+    ///     .unwrap();
     /// # }
     /// ```
     pub async fn try_get_endpoint_for_op_id(&mut self, op_id: &str) -> Result<String, EsiError> {
