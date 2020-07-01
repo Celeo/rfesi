@@ -5,7 +5,7 @@
 [![Docs.rs](https://docs.rs/rfesi/badge.svg)](https://docs.rs/rfesi)
 [![License](https://img.shields.io/crates/l/rfesi)](https://github.com/Celeo/rfesi/blob/master/Cargo.toml#L10)
 
-Rust API for the EVE online ESI
+Rust API for the EVE Online ESI
 
 ## Installing
 
