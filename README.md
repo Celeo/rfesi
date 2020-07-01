@@ -15,6 +15,8 @@ Add the latest version to your `Cargo.toml`.
 
 See [the docs](https://docs.rs/rfesi).
 
+Note that adding all of the endpoints would very tedious, so I'm adding endpoints in a rough order of what I think are most useful.
+
 ## Developing
 
 ### Building

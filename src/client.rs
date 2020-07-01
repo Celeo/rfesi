@@ -241,16 +241,16 @@ impl Esi {
     pub async fn query<T: DeserializeOwned>(
         &self,
         method: &str,
-        url_base: RequestType,
+        request_type: RequestType,
         endpoint: &str,
         query: Option<&[(&str, &str)]>,
         body: Option<&str>,
     ) -> Result<T, EsiError> {
         debug!(
             "Making {} request to {:?}{} with query {:?}",
-            method, url_base, endpoint, query
+            method, request_type, endpoint, query
         );
-        if url_base == RequestType::Authenticated && self.access_token.is_none() {
+        if request_type == RequestType::Authenticated && self.access_token.is_none() {
             return Err(EsiError::MissingAuthentication);
         }
         // TODO caching
@@ -272,7 +272,7 @@ impl Esi {
         };
         let url = format!(
             "{}{}",
-            match url_base {
+            match request_type {
                 RequestType::Public => BASE_URL,
                 RequestType::Authenticated => OAUTH_URL,
             },
