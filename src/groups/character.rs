@@ -51,7 +51,7 @@ impl<'a> CharacterGroup<'a> {
         let path = self
             .esi
             .get_endpoint_for_op_id("get_characters_character_id")?
-            .replace("character_id", &character_id.to_string());
+            .replace("{character_id}", &character_id.to_string());
         self.esi
             .query("GET", RequestType::Public, &path, None, None)
             .await
@@ -65,7 +65,7 @@ impl<'a> CharacterGroup<'a> {
         let path = self
             .esi
             .get_endpoint_for_op_id("get_characters_character_id_corporationhistory")?
-            .replace("character_id", &character_id.to_string());
+            .replace("{character_id}", &character_id.to_string());
         self.esi
             .query("GET", RequestType::Public, &path, None, None)
             .await
@@ -76,7 +76,7 @@ impl<'a> CharacterGroup<'a> {
         let path = self
             .esi
             .get_endpoint_for_op_id("get_characters_character_id_portrait")?
-            .replace("character_id", &character_id.to_string());
+            .replace("{character_id}", &character_id.to_string());
         self.esi
             .query("GET", RequestType::Public, &path, None, None)
             .await
