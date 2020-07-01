@@ -32,18 +32,18 @@ impl<'a> AllianceGroup<'a> {
             .await
     }
 
-    /// Get public information about an alliance by ID.
-    pub async fn get_info(&self, id: u64) -> Result<AllianceInfo, EsiError> {
+    /// Get public information about an alliance
+    pub async fn get_info(&self, alliance_id: u64) -> Result<AllianceInfo, EsiError> {
         let path = self
             .esi
             .get_endpoint_for_op_id("get_alliances_alliance_id")?
-            .replace("{alliance_id}", &id.to_string());
+            .replace("{alliance_id}", &alliance_id.to_string());
         self.esi
             .query("GET", RequestType::Public, &path, None, None)
             .await
     }
 
-    /// Get list of corporation IDs in an alliance by ID.
+    /// Get list of corporation IDs in an alliance
     pub async fn get_alliance_corporations(&self, alliance_id: u64) -> Result<Vec<u64>, EsiError> {
         let path = self
             .esi
@@ -54,12 +54,12 @@ impl<'a> AllianceGroup<'a> {
             .await
     }
 
-    /// Get paths to the alliance's icons on the image server, by ID.
-    pub async fn get_alliance_icons(&self, id: u64) -> Result<AllianceIcons, EsiError> {
+    /// Get paths to the alliance's icons on the image server.
+    pub async fn get_alliance_icons(&self, alliance_id: u64) -> Result<AllianceIcons, EsiError> {
         let path = self
             .esi
             .get_endpoint_for_op_id("get_alliances_alliance_id_icons")?
-            .replace("{alliance_id}", &id.to_string());
+            .replace("{alliance_id}", &alliance_id.to_string());
         self.esi
             .query("GET", RequestType::Public, &path, None, None)
             .await
