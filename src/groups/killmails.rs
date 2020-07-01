@@ -74,4 +74,6 @@ impl<'a> KillmailsGroup<'a> {
             .query("GET", RequestType::Public, &path, None, None)
             .await
     }
+
+    // more endpoints ...
 }
