@@ -17,10 +17,8 @@ pub struct AllianceInfo {
 
 #[derive(Debug, Deserialize)]
 pub struct AllianceIcons {
-    #[serde(rename = "128x128")]
-    pub p128x128: String,
-    #[serde(rename = "64x64")]
-    pub p64x64: String,
+    pub px128x128: String,
+    pub px64x64: String,
 }
 
 impl<'a> AllianceGroup<'a> {
