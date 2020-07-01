@@ -1,5 +1,3 @@
-#![allow(unused)]
-
 use crate::{Esi, EsiError, RequestType};
 use serde::Deserialize;
 
