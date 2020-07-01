@@ -20,7 +20,7 @@ impl<'a> AllianceGroup<'a> {
     pub async fn list_ids(&self) -> Result<Vec<u64>, EsiError> {
         let path = self.esi.get_endpoint_for_op_id("get_alliances")?;
         self.esi
-            .query("GET", RequestType::Public, &path, None)
+            .query("GET", RequestType::Public, &path, None, None)
             .await
     }
 
@@ -31,7 +31,7 @@ impl<'a> AllianceGroup<'a> {
             .get_endpoint_for_op_id("get_alliances_alliance_id")?;
         let path = path.replace("{alliance_id}", &id.to_string());
         self.esi
-            .query("GET", RequestType::Public, &path, None)
+            .query("GET", RequestType::Public, &path, None, None)
             .await
     }
 }

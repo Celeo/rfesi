@@ -195,6 +195,10 @@ impl Esi {
             .send()
             .await?;
         if resp.status() != 200 {
+            error!(
+                "Got status {} when making call to authenticate",
+                resp.status()
+            );
             return Err(EsiError::InvalidStatusCode(resp.status().as_u16()));
         }
         let data: auth::AuthenticateResponse = resp.json().await?;
@@ -231,7 +235,7 @@ impl Esi {
     /// #     .unwrap();
     /// #[derive(Deserialize)]
     /// struct ReturnedData {}
-    /// let data: ReturnedData = esi.query("GET", RequestType::Public, "abc", None).await.unwrap();
+    /// let data: ReturnedData = esi.query("GET", RequestType::Public, "abc", None, None).await.unwrap();
     /// # }
     /// ```
     pub async fn query<T: DeserializeOwned>(
@@ -240,6 +244,7 @@ impl Esi {
         url_base: RequestType,
         endpoint: &str,
         query: Option<&[(&str, &str)]>,
+        body: Option<&str>,
     ) -> Result<T, EsiError> {
         debug!(
             "Making {} request to {:?}{} with query {:?}",
@@ -273,12 +278,16 @@ impl Esi {
             },
             endpoint
         );
-        let req = self
+        let mut req_builder = self
             .client
             .request(Method::from_str(method)?, &url)
             .headers(headers)
-            .query(query.unwrap_or_else(|| &[]))
-            .build()?;
+            .query(query.unwrap_or_else(|| &[]));
+        req_builder = match body {
+            Some(b) => req_builder.body(b.to_owned()),
+            None => req_builder,
+        };
+        let req = req_builder.build()?;
         let resp = self.client.execute(req).await?;
         if !resp.status().is_success() {
             error!(
@@ -378,7 +387,7 @@ impl Esi {
 
     /// Gets information on the currently-authenticated user.
     pub async fn get_whoami_info(&self) -> Result<auth::WhoAmIResponse, EsiError> {
-        self.query("GET", RequestType::Authenticated, "verify", None)
+        self.query("GET", RequestType::Authenticated, "verify", None, None)
             .await
     }
 
