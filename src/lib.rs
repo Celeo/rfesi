@@ -11,7 +11,7 @@
 //! # Example of the authorization flow
 //!
 //! ```rust,no_run
-//! use rfesi::{Esi, EsiBuilder, EsiError};
+//! use rfesi::{Esi, EsiBuilder, EsiError, EsiResult};
 //!
 //! fn create_esi() -> EsiResult<Esi> {
 //!     // Create a new struct from the builder. These parameters
