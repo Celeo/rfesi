@@ -31,13 +31,13 @@ pub(crate) struct AuthenticateResponse {
 #[serde(rename_all = "PascalCase")]
 pub struct WhoAmIResponse {
     #[serde(rename = "CharacterID")]
-    character_id: u64,
-    character_name: String,
-    expires_on: String,
-    scopes: String,
-    token_type: String,
-    character_owner_hash: String,
-    intellectual_property: String,
+    pub character_id: u64,
+    pub character_name: String,
+    pub expires_on: String,
+    pub scopes: String,
+    pub token_type: String,
+    pub character_owner_hash: String,
+    pub intellectual_property: String,
 }
 
 /// Which base URL to start with - the public URL for unauthenticated
