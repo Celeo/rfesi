@@ -7,15 +7,15 @@ pub struct IncursionsGroup<'a> {
 
 #[derive(Debug, Deserialize)]
 pub struct Incursion {
-    constellation_id: u64,
-    faction_id: u64,
-    has_boss: bool,
-    infested_solar_systems: Vec<u64>,
-    influence: f64,
-    staging_solar_system_id: i64,
-    state: String,
+    pub constellation_id: u64,
+    pub faction_id: u64,
+    pub has_boss: bool,
+    pub infested_solar_systems: Vec<u64>,
+    pub influence: f64,
+    pub staging_solar_system_id: i64,
+    pub state: String,
     #[serde(rename = "type")]
-    incursion_type: String,
+    pub incursion_type: String,
 }
 
 impl<'a> IncursionsGroup<'a> {
