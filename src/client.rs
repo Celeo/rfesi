@@ -1,12 +1,12 @@
 //! Main logic
 
-use crate::{groups::*, models::auth, EsiBuilder, EsiError};
+use crate::{groups::*, EsiBuilder, EsiError};
 use log::{debug, error};
 use reqwest::{
     header::{self, HeaderMap, HeaderValue},
     Client, Method,
 };
-use serde::de::DeserializeOwned;
+use serde::{de::DeserializeOwned, Deserialize};
 use serde_json::{json, Value};
 use std::str::FromStr;
 
@@ -16,6 +16,29 @@ const AUTHORIZE_URL: &str = "https://login.eveonline.com/oauth/authorize";
 const TOKEN_URL: &str = "https://login.eveonline.com/oauth/token";
 const SPEC_URL_START: &str = "https://esi.evetech.net/_";
 const SPEC_URL_END: &str = "/swagger.json";
+
+/// Response from SSO when exchanging a SSO code for tokens.
+#[derive(Debug, Deserialize)]
+pub(crate) struct AuthenticateResponse {
+    pub(crate) access_token: String,
+    pub(crate) token_type: String,
+    pub(crate) expires_in: u64,
+    pub(crate) refresh_token: Option<String>,
+}
+
+/// Information about the currently-authenticated user.
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "PascalCase")]
+pub struct WhoAmIResponse {
+    #[serde(rename = "CharacterID")]
+    character_id: u64,
+    character_name: String,
+    expires_on: String,
+    scopes: String,
+    token_type: String,
+    character_owner_hash: String,
+    intellectual_property: String,
+}
 
 /// Which base URL to start with - the public URL for unauthenticated
 /// calls, or the authenticated URL for making calls to endpoints that
@@ -201,7 +224,7 @@ impl Esi {
             );
             return Err(EsiError::InvalidStatusCode(resp.status().as_u16()));
         }
-        let data: auth::AuthenticateResponse = resp.json().await?;
+        let data: AuthenticateResponse = resp.json().await?;
         self.access_token = Some(data.access_token);
         self.access_expiration = Some(data.expires_in + chrono::Utc::now().timestamp() as u64);
         self.refresh_token = data.refresh_token;
@@ -386,7 +409,7 @@ impl Esi {
     }
 
     /// Gets information on the currently-authenticated user.
-    pub async fn get_whoami_info(&self) -> Result<auth::WhoAmIResponse, EsiError> {
+    pub async fn get_whoami_info(&self) -> Result<WhoAmIResponse, EsiError> {
         self.query("GET", RequestType::Authenticated, "verify", None, None)
             .await
     }
@@ -549,5 +572,40 @@ impl Esi {
     /// Call endpoints under the "Wars" group in ESI.
     pub fn group_wars(&self) -> WarsGroup {
         WarsGroup { esi: self }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::AuthenticateResponse;
+
+    #[test]
+    fn test_authenticateresponse_deserialize() {
+        let source = r#"{
+            "access_token": "abc",
+            "token_type": "Bearer",
+            "expires_in": 1000,
+            "refresh_token": "def"
+          }"#;
+        let data: AuthenticateResponse = serde_json::from_str(source).unwrap();
+
+        assert_eq!(data.access_token, "abc");
+        assert_eq!(data.expires_in, 1000);
+        assert_eq!(data.refresh_token, Some("def".to_owned()));
+    }
+
+    #[test]
+    fn test_authenticateresponse_deserialize_no_refresh_token() {
+        let source = r#"{
+            "access_token": "abc",
+            "token_type": "Bearer",
+            "expires_in": 1000,
+            "refresh_token": null
+          }"#;
+        let data: AuthenticateResponse = serde_json::from_str(source).unwrap();
+
+        assert_eq!(data.access_token, "abc");
+        assert_eq!(data.expires_in, 1000);
+        assert_eq!(data.refresh_token, None);
     }
 }

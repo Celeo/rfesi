@@ -58,7 +58,6 @@ mod builders;
 mod client;
 mod errors;
 pub mod groups;
-mod models;
 
 pub use builders::EsiBuilder;
 pub use client::{Esi, RequestType};
