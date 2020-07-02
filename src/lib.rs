@@ -13,7 +13,7 @@
 //! ```rust,no_run
 //! use rfesi::{Esi, EsiBuilder, EsiError};
 //!
-//! fn create_esi() -> Result<Esi, EsiError> {
+//! fn create_esi() -> EsiResult<Esi> {
 //!     // Create a new struct from the builder. These parameters
 //!     // all come from your third-party app on the developers site.
 //!     EsiBuilder::new()
@@ -30,7 +30,7 @@
 //!     esi.get_authorize_url()
 //! }
 //!
-//! async fn authenticate_user(esi: &mut Esi, code: &str) -> Result<(), EsiError> {
+//! async fn authenticate_user(esi: &mut Esi, code: &str) -> EsiResult<()> {
 //!     // The `code` value here comes from the URL parameters your service
 //!     // is sent following a user's successful SSO.
 //!     //
@@ -61,4 +61,4 @@ pub mod groups;
 
 pub use builders::EsiBuilder;
 pub use client::{Esi, RequestType};
-pub use errors::EsiError;
+pub use errors::{EsiError, EsiResult};

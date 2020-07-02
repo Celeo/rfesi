@@ -1,6 +1,6 @@
 //! Main logic
 
-use crate::{groups::*, EsiBuilder, EsiError};
+use crate::{groups::*, EsiBuilder, EsiError, EsiResult};
 use log::{debug, error};
 use reqwest::{
     header::{self, HeaderMap, HeaderValue},
@@ -85,7 +85,7 @@ pub struct Esi {
 
 impl Esi {
     /// Consume the builder, creating an instance of this struct.
-    pub(crate) fn from_builder(builder: EsiBuilder) -> Result<Self, EsiError> {
+    pub(crate) fn from_builder(builder: EsiBuilder) -> EsiResult<Self> {
         let client = builder.construct_client()?;
         let version = builder.version.unwrap_or_else(|| "latest".to_owned());
         // let spec = Esi::get_spec(&client, &version).await?;
@@ -132,7 +132,7 @@ impl Esi {
     /// #     .unwrap();
     /// esi.update_spec().await.unwrap();
     /// # }
-    pub async fn update_spec(&mut self) -> Result<(), EsiError> {
+    pub async fn update_spec(&mut self) -> EsiResult<()> {
         debug!("Updating spec with version {}", self.version);
         let resp = self
             .client
@@ -173,7 +173,7 @@ impl Esi {
         )
     }
 
-    fn get_auth_headers(&self) -> Result<HeaderMap, EsiError> {
+    fn get_auth_headers(&self) -> EsiResult<HeaderMap> {
         let mut map = HeaderMap::new();
         let value = base64::encode(format!("{}:{}", self.client_id, self.client_secret))
             .replace("\n", "")
@@ -205,7 +205,7 @@ impl Esi {
     /// esi.authenticate("abcdef").await.unwrap();
     /// # }
     /// ```
-    pub async fn authenticate(&mut self, code: &str) -> Result<(), EsiError> {
+    pub async fn authenticate(&mut self, code: &str) -> EsiResult<()> {
         debug!("Authenticating with code {}", code);
         let resp = self
             .client
@@ -268,7 +268,7 @@ impl Esi {
         endpoint: &str,
         query: Option<&[(&str, &str)]>,
         body: Option<&str>,
-    ) -> Result<T, EsiError> {
+    ) -> EsiResult<T> {
         debug!(
             "Making {} request to {:?}{} with query {:?}",
             method, request_type, endpoint, query
@@ -353,7 +353,7 @@ impl Esi {
     ///     .unwrap();
     /// # }
     /// ```
-    pub async fn try_get_endpoint_for_op_id(&mut self, op_id: &str) -> Result<String, EsiError> {
+    pub async fn try_get_endpoint_for_op_id(&mut self, op_id: &str) -> EsiResult<String> {
         if self.spec.is_none() {
             debug!("Spec is `None`; must fetch before looking up op_id");
             self.update_spec().await?;
@@ -382,7 +382,7 @@ impl Esi {
     /// #     .unwrap();
     /// let endpoint = esi.get_endpoint_for_op_id("get_alliances_alliance_id_contacts_labels").unwrap();
     /// ```
-    pub fn get_endpoint_for_op_id(&self, op_id: &str) -> Result<String, EsiError> {
+    pub fn get_endpoint_for_op_id(&self, op_id: &str) -> EsiResult<String> {
         let data = self
             .spec
             .as_ref()
@@ -409,7 +409,7 @@ impl Esi {
     }
 
     /// Gets information on the currently-authenticated user.
-    pub async fn get_whoami_info(&self) -> Result<WhoAmIResponse, EsiError> {
+    pub async fn get_whoami_info(&self) -> EsiResult<WhoAmIResponse> {
         self.query("GET", RequestType::Authenticated, "verify", None, None)
             .await
     }

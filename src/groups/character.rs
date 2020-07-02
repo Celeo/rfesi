@@ -1,4 +1,4 @@
-use crate::{Esi, EsiError, RequestType};
+use crate::{Esi, EsiResult, RequestType};
 use serde::Deserialize;
 
 pub struct CharacterGroup<'a> {
@@ -42,10 +42,7 @@ pub struct CharacterAffiliation {
 
 impl<'a> CharacterGroup<'a> {
     /// Get a character's public information.
-    pub async fn get_public_info(
-        &self,
-        character_id: u64,
-    ) -> Result<CharacterPublicInfo, EsiError> {
+    pub async fn get_public_info(&self, character_id: u64) -> EsiResult<CharacterPublicInfo> {
         let path = self
             .esi
             .get_endpoint_for_op_id("get_characters_character_id")?
@@ -56,10 +53,7 @@ impl<'a> CharacterGroup<'a> {
     }
 
     /// Get a character's corporation history.
-    pub async fn get_history(
-        &self,
-        character_id: u64,
-    ) -> Result<Vec<CorporationHistoryItem>, EsiError> {
+    pub async fn get_history(&self, character_id: u64) -> EsiResult<Vec<CorporationHistoryItem>> {
         let path = self
             .esi
             .get_endpoint_for_op_id("get_characters_character_id_corporationhistory")?
@@ -70,7 +64,7 @@ impl<'a> CharacterGroup<'a> {
     }
 
     /// Get a character's portrait URLs on the image server.
-    pub async fn get_portrait(&self, character_id: u64) -> Result<CharacterPortraitInfo, EsiError> {
+    pub async fn get_portrait(&self, character_id: u64) -> EsiResult<CharacterPortraitInfo> {
         let path = self
             .esi
             .get_endpoint_for_op_id("get_characters_character_id_portrait")?
@@ -84,7 +78,7 @@ impl<'a> CharacterGroup<'a> {
     pub async fn get_affiliation(
         &self,
         character_ids: &[u64],
-    ) -> Result<Vec<CharacterAffiliation>, EsiError> {
+    ) -> EsiResult<Vec<CharacterAffiliation>> {
         let path = self
             .esi
             .get_endpoint_for_op_id("post_characters_affiliation")?;

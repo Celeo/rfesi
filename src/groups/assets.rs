@@ -1,4 +1,4 @@
-use crate::{Esi, EsiError, RequestType};
+use crate::{Esi, EsiResult, RequestType};
 use serde::Deserialize;
 
 pub struct AssetsGroup<'a> {
@@ -37,7 +37,7 @@ pub struct AssetName {
 
 impl<'a> AssetsGroup<'a> {
     /// Get a character's assets.
-    pub async fn get_character_assets(&self, character_id: u64) -> Result<Vec<Asset>, EsiError> {
+    pub async fn get_character_assets(&self, character_id: u64) -> EsiResult<Vec<Asset>> {
         let path = self
             .esi
             .get_endpoint_for_op_id("get_characters_character_id_assets")?
@@ -52,7 +52,7 @@ impl<'a> AssetsGroup<'a> {
         &self,
         character_id: u64,
         item_ids: &[u64],
-    ) -> Result<Vec<AssetLocation>, EsiError> {
+    ) -> EsiResult<Vec<AssetLocation>> {
         let path = self
             .esi
             .get_endpoint_for_op_id("post_characters_character_id_assets_locations")?
@@ -68,7 +68,7 @@ impl<'a> AssetsGroup<'a> {
         &self,
         character_id: u64,
         item_ids: &[u64],
-    ) -> Result<Vec<AssetName>, EsiError> {
+    ) -> EsiResult<Vec<AssetName>> {
         let path = self
             .esi
             .get_endpoint_for_op_id("post_characters_character_id_assets_names")?
@@ -82,7 +82,7 @@ impl<'a> AssetsGroup<'a> {
     /// Get a corporation's assets.
     ///
     /// Requires the auth'd character to be a director/+ in the corp.
-    pub async fn get_corporation_assets(&self, corporation_id: u64) -> Result<Vec<u64>, EsiError> {
+    pub async fn get_corporation_assets(&self, corporation_id: u64) -> EsiResult<Vec<u64>> {
         let path = self
             .esi
             .get_endpoint_for_op_id("get_corporations_corporation_id_assets")?
@@ -100,7 +100,7 @@ impl<'a> AssetsGroup<'a> {
         &self,
         corporation_id: u64,
         item_ids: &[u64],
-    ) -> Result<Vec<AssetLocation>, EsiError> {
+    ) -> EsiResult<Vec<AssetLocation>> {
         let path = self
             .esi
             .get_endpoint_for_op_id("post_corporations_corporation_id_assets_locations")?
@@ -119,7 +119,7 @@ impl<'a> AssetsGroup<'a> {
         &self,
         corporation_id: u64,
         item_ids: &[u64],
-    ) -> Result<Vec<AssetName>, EsiError> {
+    ) -> EsiResult<Vec<AssetName>> {
         let path = self
             .esi
             .get_endpoint_for_op_id("post_corporations_corporation_id_assets_names")?

@@ -24,3 +24,6 @@ pub enum EsiError {
     #[error("Failed to serialize/deserialize JSON")]
     FailedJsonParse(#[from] serde_json::Error),
 }
+
+/// Crate `Result` wrapper.
+pub type EsiResult<T> = Result<T, EsiError>;

@@ -1,6 +1,6 @@
 //! Builders
 
-use crate::{Esi, EsiError};
+use crate::{Esi, EsiError, EsiResult};
 use reqwest::{header, Client};
 use std::time::Duration;
 
@@ -93,7 +93,7 @@ impl EsiBuilder {
         self
     }
 
-    pub(crate) fn construct_client(&self) -> Result<Client, EsiError> {
+    pub(crate) fn construct_client(&self) -> EsiResult<Client> {
         let http_timeout = self
             .http_timeout
             .map(Duration::from_millis)
@@ -127,7 +127,7 @@ impl EsiBuilder {
     /// There are a few things that could go wrong, like
     /// not setting one of the mandatory fields or providing a user
     /// agent that is not a valid HTTP header value.
-    pub fn build(self) -> Result<Esi, EsiError> {
+    pub fn build(self) -> EsiResult<Esi> {
         Esi::from_builder(self)
     }
 }

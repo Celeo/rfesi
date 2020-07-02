@@ -1,4 +1,4 @@
-use crate::{Esi, EsiError, RequestType};
+use crate::{Esi, EsiResult, RequestType};
 use serde::Deserialize;
 
 pub struct KillmailsGroup<'a> {
@@ -48,7 +48,7 @@ impl<'a> KillmailsGroup<'a> {
     pub async fn get_character_recent(
         &self,
         character_id: u64,
-    ) -> Result<Vec<serde_json::Value>, EsiError> {
+    ) -> EsiResult<Vec<serde_json::Value>> {
         let path = self
             .esi
             .get_endpoint_for_op_id("get_characters_character_id_killmails_recent")?
@@ -60,11 +60,7 @@ impl<'a> KillmailsGroup<'a> {
     }
 
     /// Get a killmail.
-    pub async fn get_killmail(
-        &self,
-        killmail_id: u64,
-        killmail_hash: &str,
-    ) -> Result<Killmail, EsiError> {
+    pub async fn get_killmail(&self, killmail_id: u64, killmail_hash: &str) -> EsiResult<Killmail> {
         let path = self
             .esi
             .get_endpoint_for_op_id("get_killmails_killmail_id_killmail_hash")?

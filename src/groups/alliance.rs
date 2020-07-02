@@ -1,4 +1,4 @@
-use crate::{Esi, EsiError, RequestType};
+use crate::{Esi, EsiResult, RequestType};
 use serde::Deserialize;
 
 pub struct AllianceGroup<'a> {
@@ -23,7 +23,7 @@ pub struct AllianceIcons {
 
 impl<'a> AllianceGroup<'a> {
     /// Get a list of alliance IDs.
-    pub async fn list_ids(&self) -> Result<Vec<u64>, EsiError> {
+    pub async fn list_ids(&self) -> EsiResult<Vec<u64>> {
         let path = self.esi.get_endpoint_for_op_id("get_alliances")?;
         self.esi
             .query("GET", RequestType::Public, &path, None, None)
@@ -31,7 +31,7 @@ impl<'a> AllianceGroup<'a> {
     }
 
     /// Get public information about an alliance
-    pub async fn get_info(&self, alliance_id: u64) -> Result<AllianceInfo, EsiError> {
+    pub async fn get_info(&self, alliance_id: u64) -> EsiResult<AllianceInfo> {
         let path = self
             .esi
             .get_endpoint_for_op_id("get_alliances_alliance_id")?
@@ -42,7 +42,7 @@ impl<'a> AllianceGroup<'a> {
     }
 
     /// Get list of corporation IDs in an alliance
-    pub async fn get_alliance_corporations(&self, alliance_id: u64) -> Result<Vec<u64>, EsiError> {
+    pub async fn get_alliance_corporations(&self, alliance_id: u64) -> EsiResult<Vec<u64>> {
         let path = self
             .esi
             .get_endpoint_for_op_id("get_alliances_alliance_id_corporations")?
@@ -53,7 +53,7 @@ impl<'a> AllianceGroup<'a> {
     }
 
     /// Get paths to the alliance's icons on the image server.
-    pub async fn get_alliance_icons(&self, alliance_id: u64) -> Result<AllianceIcons, EsiError> {
+    pub async fn get_alliance_icons(&self, alliance_id: u64) -> EsiResult<AllianceIcons> {
         let path = self
             .esi
             .get_endpoint_for_op_id("get_alliances_alliance_id_icons")?

@@ -1,4 +1,4 @@
-use crate::{Esi, EsiError, RequestType};
+use crate::{Esi, EsiResult, RequestType};
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
@@ -31,10 +31,7 @@ pub struct CorporationGroup<'a> {
 
 impl<'a> CorporationGroup<'a> {
     /// Get a corporation's public info.
-    pub async fn get_public_info(
-        &self,
-        corporation_id: u64,
-    ) -> Result<CorporationPublicInfo, EsiError> {
+    pub async fn get_public_info(&self, corporation_id: u64) -> EsiResult<CorporationPublicInfo> {
         let path = self
             .esi
             .get_endpoint_for_op_id("get_corporations_corporation_id")?
@@ -45,10 +42,7 @@ impl<'a> CorporationGroup<'a> {
     }
 
     /// Get a corporation's alliance history.
-    pub async fn get_history(
-        &self,
-        corporation_id: u64,
-    ) -> Result<Vec<CorporationHistoryItem>, EsiError> {
+    pub async fn get_history(&self, corporation_id: u64) -> EsiResult<Vec<CorporationHistoryItem>> {
         let path = self
             .esi
             .get_endpoint_for_op_id("get_corporations_corporation_id_alliancehistory")?
@@ -61,7 +55,7 @@ impl<'a> CorporationGroup<'a> {
     /// Get a corporation's member list.
     ///
     /// Requires the auth'd character to be in the corporation.
-    pub async fn get_members(&self, corporation_id: u64) -> Result<Vec<u64>, EsiError> {
+    pub async fn get_members(&self, corporation_id: u64) -> EsiResult<Vec<u64>> {
         let path = self
             .esi
             .get_endpoint_for_op_id("get_corporations_corporation_id_members")?
@@ -72,7 +66,7 @@ impl<'a> CorporationGroup<'a> {
     }
 
     /// Get a list of NPC corporations.
-    pub async fn get_npc_corps(&self) -> Result<Vec<u64>, EsiError> {
+    pub async fn get_npc_corps(&self) -> EsiResult<Vec<u64>> {
         let path = self
             .esi
             .get_endpoint_for_op_id("get_corporations_npccorps")?;
