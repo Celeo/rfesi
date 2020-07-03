@@ -1,17 +1,20 @@
-use crate::{Esi, EsiResult, RequestType};
+use crate::{simple_get, Esi, EsiResult, RequestType};
 use serde::Deserialize;
 
+/// Endpoints for FactionWarfare
 pub struct FactionWarfareGroup<'a> {
     pub(crate) esi: &'a Esi,
 }
 
 #[derive(Debug, Deserialize)]
+#[allow(missing_docs)]
 pub struct FactionLeaderboardItem {
     pub amount: u64,
     pub faction_id: u64,
 }
 
 #[derive(Debug, Deserialize)]
+#[allow(missing_docs)]
 pub struct FactionLeaderboardListing {
     pub active_total: Vec<FactionLeaderboardItem>,
     pub last_week: Vec<FactionLeaderboardItem>,
@@ -19,18 +22,21 @@ pub struct FactionLeaderboardListing {
 }
 
 #[derive(Debug, Deserialize)]
+#[allow(missing_docs)]
 pub struct FWLeaderboards {
     pub kills: FactionLeaderboardListing,
     pub victory_points: FactionLeaderboardListing,
 }
 
 #[derive(Debug, Deserialize)]
+#[allow(missing_docs)]
 pub struct CharacterLeaderboardItem {
     pub amount: u64,
     pub character_id: u64,
 }
 
 #[derive(Debug, Deserialize)]
+#[allow(missing_docs)]
 pub struct CharacterLeaderboardListing {
     pub active_total: Vec<CharacterLeaderboardItem>,
     pub last_week: Vec<CharacterLeaderboardItem>,
@@ -38,18 +44,21 @@ pub struct CharacterLeaderboardListing {
 }
 
 #[derive(Debug, Deserialize)]
+#[allow(missing_docs)]
 pub struct FWCharacterLeaderboards {
     pub kills: CharacterLeaderboardListing,
     pub victory_points: CharacterLeaderboardListing,
 }
 
 #[derive(Debug, Deserialize)]
+#[allow(missing_docs)]
 pub struct CorporationLeaderboardItem {
     pub amount: u64,
     pub corporation_id: u64,
 }
 
 #[derive(Debug, Deserialize)]
+#[allow(missing_docs)]
 pub struct CorporationLeaderboardListing {
     pub active_total: Vec<CorporationLeaderboardItem>,
     pub last_week: Vec<CorporationLeaderboardItem>,
@@ -57,12 +66,14 @@ pub struct CorporationLeaderboardListing {
 }
 
 #[derive(Debug, Deserialize)]
+#[allow(missing_docs)]
 pub struct FWCorporationLeaderboards {
     pub kills: CorporationLeaderboardListing,
     pub victory_points: CorporationLeaderboardListing,
 }
 
 #[derive(Debug, Deserialize)]
+#[allow(missing_docs)]
 pub struct FWStatsItemRange {
     pub total: u64,
     pub last_week: u64,
@@ -70,6 +81,7 @@ pub struct FWStatsItemRange {
 }
 
 #[derive(Debug, Deserialize)]
+#[allow(missing_docs)]
 pub struct FWStatsItem {
     pub faction_id: u64,
     pub kills: FWStatsItemRange,
@@ -79,6 +91,7 @@ pub struct FWStatsItem {
 }
 
 #[derive(Debug, Deserialize)]
+#[allow(missing_docs)]
 pub struct FWSystem {
     pub contested: String,
     pub occupier_faction_id: u64,
@@ -89,63 +102,54 @@ pub struct FWSystem {
 }
 
 #[derive(Debug, Deserialize)]
+#[allow(missing_docs)]
 pub struct FWWar {
     pub faction_id: u64,
     pub against_id: u64,
 }
 
 impl<'a> FactionWarfareGroup<'a> {
-    /// Get the top 4 leaderboards of factions for total, last week, and yesterday.
-    pub async fn leaderboards(&self) -> EsiResult<FWLeaderboards> {
-        let path = self.esi.get_endpoint_for_op_id("get_fw_leaderboards")?;
-        self.esi
-            .query("GET", RequestType::Public, &path, None, None)
-            .await
-    }
+    simple_get!(
+        /// Get the top 4 leaderboards of factions for total, last week, and yesterday.
+        leaderboards,
+        "get_fw_leaderboards",
+        FWLeaderboards
+    );
 
-    /// Get top 100 characters for total, last week, and yesterday.
-    pub async fn leaderboard_characters(&self) -> EsiResult<FWCharacterLeaderboards> {
-        let path = self
-            .esi
-            .get_endpoint_for_op_id("get_fw_leaderboards_characters")?;
-        self.esi
-            .query("GET", RequestType::Public, &path, None, None)
-            .await
-    }
+    simple_get!(
+        /// Get top 100 characters for total, last week, and yesterday.
+        leaderboard_characters,
+        "get_fw_leaderboards_characters",
+        FWCharacterLeaderboards
+    );
 
-    /// Get top 10 corporations for total, last week, and yesterday.
-    pub async fn leaderboard_corporations(&self) -> EsiResult<FWCorporationLeaderboards> {
-        let path = self
-            .esi
-            .get_endpoint_for_op_id("get_fw_leaderboards_corporations")?;
-        self.esi
-            .query("GET", RequestType::Public, &path, None, None)
-            .await
-    }
+    simple_get!(
+        /// Get top 10 corporations for total, last week, and yesterday.
+        leaderboard_corporations,
+        "get_fw_leaderboards_corporations",
+        FWCorporationLeaderboards
+    );
 
-    /// Get FW overview stats.
-    pub async fn stats(&self) -> EsiResult<Vec<FWStatsItem>> {
-        let path = self.esi.get_endpoint_for_op_id("get_fw_stats")?;
-        self.esi
-            .query("GET", RequestType::Public, &path, None, None)
-            .await
-    }
+    simple_get!(
+        /// Get FW overview stats.
+        stats,
+        "get_fw_stats",
+        Vec<FWStatsItem>
+    );
 
-    /// Get FW system ownership.
-    pub async fn systems(&self) -> EsiResult<Vec<FWSystem>> {
-        let path = self.esi.get_endpoint_for_op_id("get_fw_systems")?;
-        self.esi
-            .query("GET", RequestType::Public, &path, None, None)
-            .await
-    }
+    simple_get!(
+        /// Get FW system ownership.
+        systems,
+        "get_fw_systems",
+        Vec<FWSystem>
+    );
 
-    /// Get FW faction information.
-    pub async fn wars(&self) -> EsiResult<Vec<FWWar>> {
-        let path = self.esi.get_endpoint_for_op_id("get_fw_wars")?;
-        self.esi
-            .query("GET", RequestType::Public, &path, None, None)
-            .await
-    }
+    simple_get!(
+        /// Get FW faction information.
+        wars,
+        "get_fw_wars",
+        Vec<FWWar>
+    );
 
     // more endpoints ...
 }

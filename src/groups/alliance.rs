@@ -1,11 +1,13 @@
-use crate::{Esi, EsiResult, RequestType};
+use crate::{simple_get, Esi, EsiResult, RequestType};
 use serde::Deserialize;
 
+/// Endpoints for Alliance
 pub struct AllianceGroup<'a> {
     pub(crate) esi: &'a Esi,
 }
 
 #[derive(Debug, Deserialize)]
+#[allow(missing_docs)]
 pub struct AllianceInfo {
     pub creator_corporation_id: u64,
     pub creator_id: u64,
@@ -16,19 +18,19 @@ pub struct AllianceInfo {
 }
 
 #[derive(Debug, Deserialize)]
+#[allow(missing_docs)]
 pub struct AllianceIcons {
     pub px128x128: String,
     pub px64x64: String,
 }
 
 impl<'a> AllianceGroup<'a> {
-    /// Get a list of alliance IDs.
-    pub async fn list_ids(&self) -> EsiResult<Vec<u64>> {
-        let path = self.esi.get_endpoint_for_op_id("get_alliances")?;
-        self.esi
-            .query("GET", RequestType::Public, &path, None, None)
-            .await
-    }
+    simple_get!(
+        /// Get a list of alliance IDs.
+        list_ids,
+        "get_alliances",
+        Vec<u64>
+    );
 
     /// Get public information about an alliance
     pub async fn get_info(&self, alliance_id: u64) -> EsiResult<AllianceInfo> {

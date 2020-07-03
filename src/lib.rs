@@ -53,11 +53,13 @@
 //! [developers site]: https://developers.eveonline.com
 
 #![deny(clippy::all)]
+#![deny(missing_docs)]
 
 mod builders;
 mod client;
 mod errors;
 pub mod groups;
+mod macros;
 
 pub use builders::EsiBuilder;
 pub use client::{Esi, RequestType};

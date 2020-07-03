@@ -1,7 +1,8 @@
-use crate::{Esi, EsiResult, RequestType};
+use crate::{simple_get, Esi, EsiResult, RequestType};
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
+#[allow(missing_docs)]
 pub struct CorporationPublicInfo {
     pub alliance_id: Option<u64>,
     pub ceo_id: u64,
@@ -19,12 +20,14 @@ pub struct CorporationPublicInfo {
 }
 
 #[derive(Debug, Deserialize)]
+#[allow(missing_docs)]
 pub struct CorporationHistoryItem {
     pub alliance_id: u64,
     pub record_id: u64,
     pub start_date: String,
 }
 
+/// Endpoints for Corporation
 pub struct CorporationGroup<'a> {
     pub(crate) esi: &'a Esi,
 }
@@ -65,15 +68,12 @@ impl<'a> CorporationGroup<'a> {
             .await
     }
 
-    /// Get a list of NPC corporations.
-    pub async fn get_npc_corps(&self) -> EsiResult<Vec<u64>> {
-        let path = self
-            .esi
-            .get_endpoint_for_op_id("get_corporations_npccorps")?;
-        self.esi
-            .query("GET", RequestType::Public, &path, None, None)
-            .await
-    }
+    simple_get!(
+        /// Get a list of NPC corporations.
+        get_npc_corps,
+        "get_corporations_npccorps",
+        Vec<u64>
+    );
 
     // more endpoints ...
 }

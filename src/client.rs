@@ -45,7 +45,9 @@ pub struct WhoAmIResponse {
 /// require an access token.
 #[derive(Debug, PartialEq)]
 pub enum RequestType {
+    /// Endpoints that do not require authentication
     Public,
+    /// Endpoints that require acting on behalf of an authenticated character
     Authenticated,
 }
 

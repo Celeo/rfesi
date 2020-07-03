@@ -45,41 +45,49 @@ impl EsiBuilder {
         self
     }
 
+    /// Set the client_id.
     pub fn client_id(mut self, val: &str) -> Self {
         self.client_id = Some(val.to_owned());
         self
     }
 
+    /// Set the client_secret.
     pub fn client_secret(mut self, val: &str) -> Self {
         self.client_secret = Some(val.to_owned());
         self
     }
 
+    /// Set the callback_url.
     pub fn callback_url(mut self, val: &str) -> Self {
         self.callback_url = Some(val.to_owned());
         self
     }
 
+    /// Set the scope.
     pub fn scope(mut self, val: &str) -> Self {
         self.scope = Some(val.to_owned());
         self
     }
 
+    /// Set the access_token.
     pub fn access_token(mut self, val: Option<&str>) -> Self {
         self.access_token = val.map(|v| v.to_owned());
         self
     }
 
+    /// Set the access_expiration.
     pub fn access_expiration(mut self, val: Option<u64>) -> Self {
         self.access_expiration = val;
         self
     }
 
+    /// Set the refresh_token.
     pub fn refresh_token(mut self, val: Option<&str>) -> Self {
         self.refresh_token = val.map(|v| v.to_owned());
         self
     }
 
+    /// Set the user_agent.
     pub fn user_agent(mut self, val: &str) -> Self {
         self.user_agent = Some(val.to_owned());
         self

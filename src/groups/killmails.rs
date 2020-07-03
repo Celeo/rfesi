@@ -1,11 +1,13 @@
 use crate::{Esi, EsiResult, RequestType};
 use serde::Deserialize;
 
+/// Endpoints for Killmails
 pub struct KillmailsGroup<'a> {
     pub(crate) esi: &'a Esi,
 }
 
 #[derive(Debug, Deserialize)]
+#[allow(missing_docs)]
 pub struct KillmailAttacker {
     pub alliance_id: u64,
     pub character_id: u64,
@@ -18,6 +20,7 @@ pub struct KillmailAttacker {
 }
 
 #[derive(Debug, Deserialize)]
+#[allow(missing_docs)]
 pub struct KillmailItem {
     pub flag: u64,
     pub item_type_id: u64,
@@ -26,6 +29,7 @@ pub struct KillmailItem {
 }
 
 #[derive(Debug, Deserialize)]
+#[allow(missing_docs)]
 pub struct KillmailVictim {
     pub character_id: u64,
     pub corporation_id: u64,
@@ -35,6 +39,7 @@ pub struct KillmailVictim {
 }
 
 #[derive(Debug, Deserialize)]
+#[allow(missing_docs)]
 pub struct Killmail {
     pub killmail_id: u64,
     pub killmail_type: String,

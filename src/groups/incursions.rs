@@ -1,11 +1,13 @@
-use crate::{Esi, EsiResult, RequestType};
+use crate::{simple_get, Esi, EsiResult, RequestType};
 use serde::Deserialize;
 
+/// Endpoints for Incursions
 pub struct IncursionsGroup<'a> {
     pub(crate) esi: &'a Esi,
 }
 
 #[derive(Debug, Deserialize)]
+#[allow(missing_docs)]
 pub struct Incursion {
     pub constellation_id: u64,
     pub faction_id: u64,
@@ -19,11 +21,10 @@ pub struct Incursion {
 }
 
 impl<'a> IncursionsGroup<'a> {
-    /// Get the current incursions.
-    pub async fn list(&self) -> EsiResult<Vec<Incursion>> {
-        let path = self.esi.get_endpoint_for_op_id("get_incursions")?;
-        self.esi
-            .query("GET", RequestType::Public, &path, None, None)
-            .await
-    }
+    simple_get!(
+        /// Get the current incursions.
+        list,
+        "get_incursions",
+        Vec<Incursion>
+    );
 }

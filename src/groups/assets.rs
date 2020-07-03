@@ -1,11 +1,13 @@
 use crate::{Esi, EsiResult, RequestType};
 use serde::Deserialize;
 
+/// Endpoints for Assets
 pub struct AssetsGroup<'a> {
     pub(crate) esi: &'a Esi,
 }
 
 #[derive(Debug, Deserialize)]
+#[allow(missing_docs)]
 pub struct Asset {
     pub is_singleton: bool,
     pub item_id: u64,
@@ -17,6 +19,7 @@ pub struct Asset {
 }
 
 #[derive(Debug, Deserialize)]
+#[allow(missing_docs)]
 pub struct AssetLocationPosition {
     pub x: u64,
     pub y: u64,
@@ -24,12 +27,14 @@ pub struct AssetLocationPosition {
 }
 
 #[derive(Debug, Deserialize)]
+#[allow(missing_docs)]
 pub struct AssetLocation {
     pub item_id: u64,
     pub position: AssetLocationPosition,
 }
 
 #[derive(Debug, Deserialize)]
+#[allow(missing_docs)]
 pub struct AssetName {
     pub item_id: u64,
     pub name: String,

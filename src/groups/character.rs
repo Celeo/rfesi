@@ -1,11 +1,13 @@
 use crate::{Esi, EsiResult, RequestType};
 use serde::Deserialize;
 
+/// Endpoints for Character
 pub struct CharacterGroup<'a> {
     pub(crate) esi: &'a Esi,
 }
 
 #[derive(Debug, Deserialize)]
+#[allow(missing_docs)]
 pub struct CharacterPublicInfo {
     pub alliance_id: u64,
     pub ancestry_id: u16,
@@ -19,6 +21,7 @@ pub struct CharacterPublicInfo {
 }
 
 #[derive(Debug, Deserialize)]
+#[allow(missing_docs)]
 pub struct CorporationHistoryItem {
     pub corporation_id: u64,
     pub record_id: u64,
@@ -26,6 +29,7 @@ pub struct CorporationHistoryItem {
 }
 
 #[derive(Debug, Deserialize)]
+#[allow(missing_docs)]
 pub struct CharacterPortraitInfo {
     pub px128x128: String,
     pub px256x256: String,
@@ -34,6 +38,7 @@ pub struct CharacterPortraitInfo {
 }
 
 #[derive(Debug, Deserialize)]
+#[allow(missing_docs)]
 pub struct CharacterAffiliation {
     pub alliance_id: u64,
     pub character: u64,
