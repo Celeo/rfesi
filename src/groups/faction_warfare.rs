@@ -1,4 +1,4 @@
-use crate::{simple_get, Esi, EsiResult, RequestType};
+use crate::{http_get, Esi, EsiResult, RequestType};
 use serde::Deserialize;
 
 /// Endpoints for FactionWarfare
@@ -109,46 +109,46 @@ pub struct FWWar {
 }
 
 impl<'a> FactionWarfareGroup<'a> {
-    simple_get!(
+    http_get!(
         /// Get the top 4 leaderboards of factions for total, last week, and yesterday.
         leaderboards,
         "get_fw_leaderboards",
-        FWLeaderboards
+        FWLeaderboards,
     );
 
-    simple_get!(
+    http_get!(
         /// Get top 100 characters for total, last week, and yesterday.
         leaderboard_characters,
         "get_fw_leaderboards_characters",
-        FWCharacterLeaderboards
+        FWCharacterLeaderboards,
     );
 
-    simple_get!(
+    http_get!(
         /// Get top 10 corporations for total, last week, and yesterday.
         leaderboard_corporations,
         "get_fw_leaderboards_corporations",
-        FWCorporationLeaderboards
+        FWCorporationLeaderboards,
     );
 
-    simple_get!(
+    http_get!(
         /// Get FW overview stats.
         stats,
         "get_fw_stats",
-        Vec<FWStatsItem>
+        Vec<FWStatsItem>,
     );
 
-    simple_get!(
+    http_get!(
         /// Get FW system ownership.
         systems,
         "get_fw_systems",
-        Vec<FWSystem>
+        Vec<FWSystem>,
     );
 
-    simple_get!(
+    http_get!(
         /// Get FW faction information.
         wars,
         "get_fw_wars",
-        Vec<FWWar>
+        Vec<FWWar>,
     );
 
     // more endpoints ...

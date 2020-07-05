@@ -1,4 +1,4 @@
-use crate::{simple_get, Esi, EsiResult, RequestType};
+use crate::{http_get, Esi, EsiResult, RequestType};
 use serde::Deserialize;
 
 /// Endpoints for Alliance
@@ -25,43 +25,34 @@ pub struct AllianceIcons {
 }
 
 impl<'a> AllianceGroup<'a> {
-    simple_get!(
+    http_get!(
         /// Get a list of alliance IDs.
         list_ids,
         "get_alliances",
-        Vec<u64>
+        Vec<u64>,
     );
 
-    /// Get public information about an alliance
-    pub async fn get_info(&self, alliance_id: u64) -> EsiResult<AllianceInfo> {
-        let path = self
-            .esi
-            .get_endpoint_for_op_id("get_alliances_alliance_id")?
-            .replace("{alliance_id}", &alliance_id.to_string());
-        self.esi
-            .query("GET", RequestType::Public, &path, None, None)
-            .await
-    }
+    http_get!(
+        /// Get public information about an alliance.
+        get_info,
+        "get_alliances_alliance_id",
+        AllianceInfo,
+        (alliance_id: u64) => "{alliance_id}"
+    );
 
-    /// Get list of corporation IDs in an alliance
-    pub async fn get_alliance_corporations(&self, alliance_id: u64) -> EsiResult<Vec<u64>> {
-        let path = self
-            .esi
-            .get_endpoint_for_op_id("get_alliances_alliance_id_corporations")?
-            .replace("{alliance_id}", &alliance_id.to_string());
-        self.esi
-            .query("GET", RequestType::Public, &path, None, None)
-            .await
-    }
+    http_get!(
+        /// Get list of corporation IDs in an alliance.
+        get_alliance_corporations,
+        "get_alliances_alliance_id_corporations",
+        Vec<u64>,
+        (alliance_id: u64) => "{alliance_id}"
+    );
 
-    /// Get paths to the alliance's icons on the image server.
-    pub async fn get_alliance_icons(&self, alliance_id: u64) -> EsiResult<AllianceIcons> {
-        let path = self
-            .esi
-            .get_endpoint_for_op_id("get_alliances_alliance_id_icons")?
-            .replace("{alliance_id}", &alliance_id.to_string());
-        self.esi
-            .query("GET", RequestType::Public, &path, None, None)
-            .await
-    }
+    http_get!(
+        /// Get paths to the alliance's icons on the image server.
+        get_alliance_icons,
+        "get_alliances_alliance_id_icons",
+        AllianceIcons,
+        (alliance_id: u64) => "{alliance_id}"
+    );
 }

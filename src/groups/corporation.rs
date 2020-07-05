@@ -1,4 +1,4 @@
-use crate::{simple_get, Esi, EsiResult, RequestType};
+use crate::{http_get, Esi, EsiResult, RequestType};
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
@@ -33,27 +33,21 @@ pub struct CorporationGroup<'a> {
 }
 
 impl<'a> CorporationGroup<'a> {
-    /// Get a corporation's public info.
-    pub async fn get_public_info(&self, corporation_id: u64) -> EsiResult<CorporationPublicInfo> {
-        let path = self
-            .esi
-            .get_endpoint_for_op_id("get_corporations_corporation_id")?
-            .replace("{corporation_id}", &corporation_id.to_string());
-        self.esi
-            .query("GET", RequestType::Public, &path, None, None)
-            .await
-    }
+    http_get!(
+        /// Get a corporation's public info.
+        get_public_info,
+        "get_corporations_corporation_id",
+        CorporationPublicInfo,
+        (corporation_id: u64) => "{corporation_id}"
+    );
 
-    /// Get a corporation's alliance history.
-    pub async fn get_history(&self, corporation_id: u64) -> EsiResult<Vec<CorporationHistoryItem>> {
-        let path = self
-            .esi
-            .get_endpoint_for_op_id("get_corporations_corporation_id_alliancehistory")?
-            .replace("{corporation_id}", &corporation_id.to_string());
-        self.esi
-            .query("GET", RequestType::Public, &path, None, None)
-            .await
-    }
+    http_get!(
+        /// Get a corporation's alliance history.
+        get_history,
+        "get_corporations_corporation_id_alliancehistory",
+        Vec<CorporationHistoryItem>,
+        (corporation_id: u64) => "{corporation_id}"
+    );
 
     /// Get a corporation's member list.
     ///
@@ -68,11 +62,11 @@ impl<'a> CorporationGroup<'a> {
             .await
     }
 
-    simple_get!(
+    http_get!(
         /// Get a list of NPC corporations.
         get_npc_corps,
         "get_corporations_npccorps",
-        Vec<u64>
+        Vec<u64>,
     );
 
     // more endpoints ...

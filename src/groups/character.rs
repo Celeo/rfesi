@@ -1,4 +1,4 @@
-use crate::{Esi, EsiResult, RequestType};
+use crate::{http_get, Esi, EsiResult, RequestType};
 use serde::Deserialize;
 
 /// Endpoints for Character
@@ -46,38 +46,29 @@ pub struct CharacterAffiliation {
 }
 
 impl<'a> CharacterGroup<'a> {
-    /// Get a character's public information.
-    pub async fn get_public_info(&self, character_id: u64) -> EsiResult<CharacterPublicInfo> {
-        let path = self
-            .esi
-            .get_endpoint_for_op_id("get_characters_character_id")?
-            .replace("{character_id}", &character_id.to_string());
-        self.esi
-            .query("GET", RequestType::Public, &path, None, None)
-            .await
-    }
+    http_get!(
+        /// Get a character's public information.
+        get_public_info,
+        "get_characters_character_id",
+        CharacterPublicInfo,
+        (character_id: u64) => "{character_id}"
+    );
 
-    /// Get a character's corporation history.
-    pub async fn get_history(&self, character_id: u64) -> EsiResult<Vec<CorporationHistoryItem>> {
-        let path = self
-            .esi
-            .get_endpoint_for_op_id("get_characters_character_id_corporationhistory")?
-            .replace("{character_id}", &character_id.to_string());
-        self.esi
-            .query("GET", RequestType::Public, &path, None, None)
-            .await
-    }
+    http_get!(
+        /// Get a character's corporation history.
+        get_history,
+        "get_characters_character_id_corporationhistory",
+        Vec<CorporationHistoryItem>,
+        (character_id: u64) => "{character_id}"
+    );
 
-    /// Get a character's portrait URLs on the image server.
-    pub async fn get_portrait(&self, character_id: u64) -> EsiResult<CharacterPortraitInfo> {
-        let path = self
-            .esi
-            .get_endpoint_for_op_id("get_characters_character_id_portrait")?
-            .replace("{character_id}", &character_id.to_string());
-        self.esi
-            .query("GET", RequestType::Public, &path, None, None)
-            .await
-    }
+    http_get!(
+        /// Get a character's portrait URLs on the image server.
+        get_portrait,
+        "get_characters_character_id_portrait",
+        CharacterPortraitInfo,
+        (character_id: u64) => "{character_id}"
+    );
 
     /// Get character affiliations.
     pub async fn get_affiliation(
