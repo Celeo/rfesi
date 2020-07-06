@@ -1,4 +1,4 @@
-use crate::{http_get, Esi, EsiResult, RequestType};
+use crate::{api_get, Esi, EsiResult, RequestType};
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
@@ -33,39 +33,40 @@ pub struct CorporationGroup<'a> {
 }
 
 impl<'a> CorporationGroup<'a> {
-    http_get!(
+    api_get!(
         /// Get a corporation's public info.
         get_public_info,
         "get_corporations_corporation_id",
+        RequestType::Public,
         CorporationPublicInfo,
         (corporation_id: u64) => "{corporation_id}"
     );
 
-    http_get!(
+    api_get!(
         /// Get a corporation's alliance history.
         get_history,
         "get_corporations_corporation_id_alliancehistory",
+        RequestType::Public,
         Vec<CorporationHistoryItem>,
         (corporation_id: u64) => "{corporation_id}"
     );
 
-    /// Get a corporation's member list.
-    ///
-    /// Requires the auth'd character to be in the corporation.
-    pub async fn get_members(&self, corporation_id: u64) -> EsiResult<Vec<u64>> {
-        let path = self
-            .esi
-            .get_endpoint_for_op_id("get_corporations_corporation_id_members")?
-            .replace("{corporation_id}", &corporation_id.to_string());
-        self.esi
-            .query("GET", RequestType::Authenticated, &path, None, None)
-            .await
-    }
+    api_get!(
+        /// Get a corporation's member list.
+        ///
+        /// Requires the auth'd character to be in the corporation.
+        get_members,
+        "get_corporations_corporation_id_members",
+        RequestType::Authenticated,
+        Vec<u64>,
+        (corporation_id: u64) => "{corporation_id}"
+    );
 
-    http_get!(
+    api_get!(
         /// Get a list of NPC corporations.
         get_npc_corps,
         "get_corporations_npccorps",
+        RequestType::Public,
         Vec<u64>,
     );
 

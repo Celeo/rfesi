@@ -1,4 +1,4 @@
-use crate::{http_get, Esi, EsiResult, RequestType};
+use crate::{api_get, Esi, EsiResult, RequestType};
 use serde::Deserialize;
 
 /// Endpoints for Alliance
@@ -25,33 +25,37 @@ pub struct AllianceIcons {
 }
 
 impl<'a> AllianceGroup<'a> {
-    http_get!(
+    api_get!(
         /// Get a list of alliance IDs.
         list_ids,
         "get_alliances",
+        RequestType::Public,
         Vec<u64>,
     );
 
-    http_get!(
+    api_get!(
         /// Get public information about an alliance.
         get_info,
         "get_alliances_alliance_id",
+        RequestType::Public,
         AllianceInfo,
         (alliance_id: u64) => "{alliance_id}"
     );
 
-    http_get!(
+    api_get!(
         /// Get list of corporation IDs in an alliance.
         get_alliance_corporations,
         "get_alliances_alliance_id_corporations",
+        RequestType::Public,
         Vec<u64>,
         (alliance_id: u64) => "{alliance_id}"
     );
 
-    http_get!(
+    api_get!(
         /// Get paths to the alliance's icons on the image server.
         get_alliance_icons,
         "get_alliances_alliance_id_icons",
+        RequestType::Public,
         AllianceIcons,
         (alliance_id: u64) => "{alliance_id}"
     );

@@ -1,4 +1,4 @@
-use crate::{http_get, Esi, EsiResult, RequestType};
+use crate::{api_get, Esi, EsiResult, RequestType};
 use serde::Deserialize;
 
 /// Endpoints for Incursions
@@ -21,10 +21,11 @@ pub struct Incursion {
 }
 
 impl<'a> IncursionsGroup<'a> {
-    http_get!(
+    api_get!(
         /// Get the current incursions.
         list,
         "get_incursions",
+        RequestType::Public,
         Vec<Incursion>,
     );
 }

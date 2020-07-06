@@ -1,4 +1,4 @@
-use crate::{Esi, EsiResult, RequestType};
+use crate::{api_get, Esi, EsiResult, RequestType};
 use serde::Deserialize;
 
 /// Endpoints for Assets
@@ -41,16 +41,14 @@ pub struct AssetName {
 }
 
 impl<'a> AssetsGroup<'a> {
-    /// Get a character's assets.
-    pub async fn get_character_assets(&self, character_id: u64) -> EsiResult<Vec<Asset>> {
-        let path = self
-            .esi
-            .get_endpoint_for_op_id("get_characters_character_id_assets")?
-            .replace("{character_id}", &character_id.to_string());
-        self.esi
-            .query("GET", RequestType::Authenticated, &path, None, None)
-            .await
-    }
+    api_get!(
+        /// Get a character's assets.
+        get_character_assets,
+        "get_characters_character_id_assets",
+        RequestType::Authenticated,
+        Vec<Asset>,
+        (character_id: u64) => "{character_id}"
+    );
 
     /// Get locations of some of a character's assets.
     pub async fn get_character_assets_locations(
@@ -84,19 +82,17 @@ impl<'a> AssetsGroup<'a> {
             .await
     }
 
-    /// Get a corporation's assets.
-    ///
-    /// Requires the auth'd character to be a director/+ in the corp.
-    pub async fn get_corporation_assets(&self, corporation_id: u64) -> EsiResult<Vec<u64>> {
-        let path = self
-            .esi
-            .get_endpoint_for_op_id("get_corporations_corporation_id_assets")?
-            .replace("{corporation_id}", &corporation_id.to_string());
-        // NOTE: assuming return type; don't have the permissions to check
-        self.esi
-            .query("GET", RequestType::Authenticated, &path, None, None)
-            .await
-    }
+    // NOTE: assuming return type; don't have the permissions to check
+    api_get!(
+        /// Get a corporation's assets.
+        ///
+        /// Requires the auth'd character to be a director/+ in the corp.
+        get_corporation_assets,
+        "get_corporations_corporation_id_assets",
+        RequestType::Authenticated,
+        Vec<u64>,
+        (corporation_id: u64) => "{corporation_id}"
+    );
 
     /// Get locations of some of a corporation's assets.
     ///

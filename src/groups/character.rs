@@ -1,4 +1,4 @@
-use crate::{http_get, Esi, EsiResult, RequestType};
+use crate::{api_get, Esi, EsiResult, RequestType};
 use serde::Deserialize;
 
 /// Endpoints for Character
@@ -46,26 +46,29 @@ pub struct CharacterAffiliation {
 }
 
 impl<'a> CharacterGroup<'a> {
-    http_get!(
+    api_get!(
         /// Get a character's public information.
         get_public_info,
         "get_characters_character_id",
+        RequestType::Public,
         CharacterPublicInfo,
         (character_id: u64) => "{character_id}"
     );
 
-    http_get!(
+    api_get!(
         /// Get a character's corporation history.
         get_history,
         "get_characters_character_id_corporationhistory",
+        RequestType::Public,
         Vec<CorporationHistoryItem>,
         (character_id: u64) => "{character_id}"
     );
 
-    http_get!(
+    api_get!(
         /// Get a character's portrait URLs on the image server.
         get_portrait,
         "get_characters_character_id_portrait",
+        RequestType::Public,
         CharacterPortraitInfo,
         (character_id: u64) => "{character_id}"
     );

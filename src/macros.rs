@@ -8,7 +8,7 @@
 ///
 /// # Example
 /// ```rust,no_run
-/// # use rfesi::{http_get, Esi, EsiResult, RequestType};
+/// # use rfesi::{api_get, Esi, EsiResult, RequestType};
 /// # use serde::Deserialize;
 /// pub struct SomeGroup<'a> {
 ///     pub(crate) esi: &'a Esi,
@@ -16,10 +16,11 @@
 ///
 /// impl<'a> SomeGroup<'a> {
 ///
-///     http_get!(
+///     api_get!(
 ///         /// Docs for the generated function
 ///         function_name,
 ///         "some_operation_id",
+///         RequestType::Public,
 ///         Vec<u64>,
 ///     );
 ///
@@ -45,7 +46,7 @@
 /// # Example
 ///
 /// ```rust,no_run
-/// # use rfesi::{http_get, Esi, EsiResult, RequestType};
+/// # use rfesi::{api_get, Esi, EsiResult, RequestType};
 /// # use serde::Deserialize;
 /// pub struct SomeGroup<'a> {
 ///     pub(crate) esi: &'a Esi,
@@ -53,10 +54,11 @@
 ///
 /// impl<'a> SomeGroup<'a> {
 ///
-///     http_get!(
+///     api_get!(
 ///         /// Docs for the generated function
 ///         function_name,
 ///         "some_operation_id",
+///         RequestType::Public,
 ///         Vec<u64>,
 ///         (alliance_id: u64) => "{alliance_id}"
 ///     );
@@ -77,11 +79,12 @@
 /// }
 /// ```
 #[macro_export]
-macro_rules! http_get {
+macro_rules! api_get {
     (
         $(#[$m:meta])*
         $fn_name:ident,
         $op_id:literal,
+        $visibility:expr,
         $ret_type:ty,
         $( ($param:ident: $param_t:ty) => $replace:literal ),*
     ) => {
@@ -94,7 +97,7 @@ macro_rules! http_get {
                     .replace($replace, &$param.to_string())
                 )*;
             self.esi.
-                query("GET", RequestType::Public, &path, None, None)
+                query("GET", $visibility, &path, None, None)
                 .await
         }
     };

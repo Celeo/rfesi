@@ -1,4 +1,4 @@
-use crate::{http_get, Esi, EsiResult, RequestType};
+use crate::{api_get, Esi, EsiResult, RequestType};
 use serde::Deserialize;
 
 /// Endpoints for Killmails
@@ -49,25 +49,21 @@ pub struct Killmail {
 }
 
 impl<'a> KillmailsGroup<'a> {
+    // FIXME unknown type; I haven't played in a long time
+    api_get!(
         /// Get a character's recent kills & losses.
-    pub async fn get_character_recent(
-        &self,
-        character_id: u64,
-    ) -> EsiResult<Vec<serde_json::Value>> {
-        let path = self
-            .esi
-            .get_endpoint_for_op_id("get_characters_character_id_killmails_recent")?
-            .replace("{character_id}", &character_id.to_string());
-        // FIXME unknown type; I haven't played in a long time
-        self.esi
-            .query("GET", RequestType::Authenticated, &path, None, None)
-            .await
-    }
+        get_character_recent,
+        "get_characters_character_id_killmails_recent",
+        RequestType::Authenticated,
+        Vec<serde_json::Value>,
+        (character_id: u64) => "{character_id}"
+    );
 
-    http_get!(
+    api_get!(
         /// Get a killmail.
         get_killmail,
         "get_killmails_killmail_id_killmail_hash",
+        RequestType::Public,
         Killmail,
         (killmail_id: u64) => "{killmail_id}",
         (killmail_hash: &str) => "{killmail_hash}"
