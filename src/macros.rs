@@ -1,11 +1,6 @@
 /// Create a function for calling a single endpoint
 /// with a GET request.
 ///
-/// TODO
-/// Note that this isn't useful for any other crate,
-/// but I haven't been able to figure out how to limit
-/// the macro to just this crate, so here it lies.
-///
 /// # Example
 /// ```rust,no_run
 /// # use rfesi::{api_get, Esi, EsiResult, RequestType};
@@ -78,7 +73,6 @@
 ///         .await
 /// }
 /// ```
-#[macro_export]
 macro_rules! api_get {
     (
         $(#[$m:meta])*

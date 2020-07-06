@@ -1,4 +1,4 @@
-use crate::{api_get, Esi, EsiResult, RequestType};
+use crate::{Esi, EsiResult, RequestType};
 use serde::Deserialize;
 
 /// Endpoints for Incursions

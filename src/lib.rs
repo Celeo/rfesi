@@ -55,11 +55,13 @@
 #![deny(clippy::all)]
 #![deny(missing_docs)]
 
+#[macro_use]
+mod macros;
+
 mod builders;
 mod client;
 mod errors;
 pub mod groups;
-mod macros;
 
 pub use builders::EsiBuilder;
 pub use client::{Esi, RequestType};
