@@ -4,7 +4,6 @@
 /// # Example
 /// ```rust,no_run
 /// # use rfesi::{api_get, Esi, EsiResult, RequestType};
-/// # use serde::Deserialize;
 /// pub struct SomeGroup<'a> {
 ///     pub(crate) esi: &'a Esi,
 /// }
@@ -42,7 +41,6 @@
 ///
 /// ```rust,no_run
 /// # use rfesi::{api_get, Esi, EsiResult, RequestType};
-/// # use serde::Deserialize;
 /// pub struct SomeGroup<'a> {
 ///     pub(crate) esi: &'a Esi,
 /// }
@@ -110,7 +108,6 @@ macro_rules! api_get {
 ///
 /// ```rust,no_run
 /// # use rfesi::{api_post, Esi, EsiResult, RequestType};
-/// # use serde::Deserialize;
 /// pub struct SomeGroup<'a> {
 ///     pub(crate) esi: &'a Esi,
 /// }
@@ -150,7 +147,7 @@ macro_rules! api_post {
         $op_id:literal,
         $visibility:expr,
         $ret_type:ty,
-        $( ($param:ident: $param_t:ty) => $replace:literal ),*
+        $( ($param:ident: $param_t:ty) => $replace:literal ),*,
         $body_param:ident: $param_type:ty,
     ) => {
         $(#[$m])*

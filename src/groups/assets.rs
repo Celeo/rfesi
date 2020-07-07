@@ -50,37 +50,25 @@ impl<'a> AssetsGroup<'a> {
         (character_id: u64) => "{character_id}"
     );
 
-    /// Get locations of some of a character's assets.
-    pub async fn get_character_assets_locations(
-        &self,
-        character_id: u64,
+    api_post!(
+        /// Get locations of some of a character's assets.
+        get_character_assets_locations,
+        "post_characters_character_id_assets_locations",
+        RequestType::Authenticated,
+        Vec<AssetLocation>,
+        (character_id: u64) => "{character_id}",
         item_ids: &[u64],
-    ) -> EsiResult<Vec<AssetLocation>> {
-        let path = self
-            .esi
-            .get_endpoint_for_op_id("post_characters_character_id_assets_locations")?
-            .replace("{character_id}", &character_id.to_string());
-        let body = serde_json::to_string(item_ids)?;
-        self.esi
-            .query("POST", RequestType::Authenticated, &path, None, Some(&body))
-            .await
-    }
+    );
 
-    /// Get names of some of a character's assets.
-    pub async fn get_character_assets_names(
-        &self,
-        character_id: u64,
+    api_post!(
+        /// Get names of some of a character's assets.
+        get_character_assets_names,
+        "post_characters_character_id_assets_names",
+        RequestType::Authenticated,
+        Vec<AssetName>,
+        (character_id: u64) => "{character_id}",
         item_ids: &[u64],
-    ) -> EsiResult<Vec<AssetName>> {
-        let path = self
-            .esi
-            .get_endpoint_for_op_id("post_characters_character_id_assets_names")?
-            .replace("{character_id}", &character_id.to_string());
-        let body = serde_json::to_string(item_ids)?;
-        self.esi
-            .query("POST", RequestType::Authenticated, &path, None, Some(&body))
-            .await
-    }
+    );
 
     // NOTE: assuming return type; don't have the permissions to check
     api_get!(
@@ -94,41 +82,27 @@ impl<'a> AssetsGroup<'a> {
         (corporation_id: u64) => "{corporation_id}"
     );
 
-    /// Get locations of some of a corporation's assets.
-    ///
-    /// Requires the auth'd character to be a director/+ in the corp.
-    pub async fn get_corporation_assets_locations(
-        &self,
-        corporation_id: u64,
+    api_post!(
+        /// Get locations of some of a corporation's assets.
+        ///
+        /// Requires the auth'd character to be a director/+ in the corp.
+        get_corporation_assets_locations,
+        "post_corporations_corporation_id_assets_locations",
+        RequestType::Authenticated,
+        Vec<AssetLocation>,
+        (corporation_id: u64) => "{corporation_id}",
         item_ids: &[u64],
-    ) -> EsiResult<Vec<AssetLocation>> {
-        let path = self
-            .esi
-            .get_endpoint_for_op_id("post_corporations_corporation_id_assets_locations")?
-            .replace("{corporation_id}", &corporation_id.to_string());
-        let body = serde_json::to_string(item_ids)?;
-        // NOTE: assuming return type; don't have the permissions to check
-        self.esi
-            .query("POST", RequestType::Authenticated, &path, None, Some(&body))
-            .await
-    }
+    );
 
-    /// Get names of some of a corporation's assets.
-    ///
-    /// Requires the auth'd character to be a director/+ in the corp.
-    pub async fn get_corporation_assets_names(
-        &self,
-        corporation_id: u64,
+    api_post!(
+        /// Get names of some of a corporation's assets.
+        ///
+        /// Requires the auth'd character to be a director/+ in the corp.
+        get_corporation_assets_names,
+        "post_corporations_corporation_id_assets_names",
+        RequestType::Authenticated,
+        Vec<AssetName>,
+        (corporation_id: u64) => "{corporation_id}",
         item_ids: &[u64],
-    ) -> EsiResult<Vec<AssetName>> {
-        let path = self
-            .esi
-            .get_endpoint_for_op_id("post_corporations_corporation_id_assets_names")?
-            .replace("{corporation_id}", &corporation_id.to_string());
-        let body = serde_json::to_string(item_ids)?;
-        // NOTE: assuming return type; don't have the permissions to check
-        self.esi
-            .query("POST", RequestType::Authenticated, &path, None, Some(&body))
-            .await
-    }
+    );
 }

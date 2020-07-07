@@ -49,7 +49,7 @@ pub struct Killmail {
 }
 
 impl<'a> KillmailsGroup<'a> {
-    // FIXME unknown type; I haven't played in a long time
+    // NOTE unknown type; I haven't played in a long time
     api_get!(
         /// Get a character's recent kills & losses.
         get_character_recent,

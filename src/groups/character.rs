@@ -73,19 +73,15 @@ impl<'a> CharacterGroup<'a> {
         (character_id: u64) => "{character_id}"
     );
 
-    /// Get character affiliations.
-    pub async fn get_affiliation(
-        &self,
+    api_post!(
+        /// Get character affiliations.
+        get_affiliation,
+        "post_characters_affiliation",
+        RequestType::Public,
+        Vec<CharacterAffiliation>,
+        ,
         character_ids: &[u64],
-    ) -> EsiResult<Vec<CharacterAffiliation>> {
-        let path = self
-            .esi
-            .get_endpoint_for_op_id("post_characters_affiliation")?;
-        let body = serde_json::to_string(character_ids)?;
-        self.esi
-            .query("POST", RequestType::Public, &path, None, Some(&body))
-            .await
-    }
+    );
 
     // more endpoints ...
 }
