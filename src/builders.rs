@@ -8,7 +8,7 @@ use std::time::Duration;
 ///
 /// # Example
 /// ```rust
-/// # use rfesi::EsiBuilder;
+/// # use rfesi::prelude::EsiBuilder;
 /// let mut esi = EsiBuilder::new()
 ///     .user_agent("some user agent")
 ///     .client_id("your_client_id")

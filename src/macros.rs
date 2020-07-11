@@ -3,7 +3,7 @@
 ///
 /// # Example
 /// ```rust,no_run
-/// # use rfesi::{api_get, Esi, EsiResult, RequestType};
+/// # use rfesi::prelude::*
 /// pub struct SomeGroup<'a> {
 ///     pub(crate) esi: &'a Esi,
 /// }
@@ -40,7 +40,7 @@
 /// # Example
 ///
 /// ```rust,no_run
-/// # use rfesi::{api_get, Esi, EsiResult, RequestType};
+/// # use rfesi::prelude::*;
 /// pub struct SomeGroup<'a> {
 ///     pub(crate) esi: &'a Esi,
 /// }
@@ -107,7 +107,7 @@ macro_rules! api_get {
 /// # Example
 ///
 /// ```rust,no_run
-/// # use rfesi::{api_post, Esi, EsiResult, RequestType};
+/// # use rfesi::prelude::*
 /// pub struct SomeGroup<'a> {
 ///     pub(crate) esi: &'a Esi,
 /// }

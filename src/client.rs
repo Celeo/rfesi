@@ -57,7 +57,7 @@ pub enum RequestType {
 ///
 /// # Example
 /// ```rust,no_run
-/// use rfesi::EsiBuilder;
+/// use rfesi::prelude::EsiBuilder;
 /// // the struct must be mutable for some functionality
 /// let mut esi = EsiBuilder::new()
 ///     .user_agent("some user agent")
@@ -124,7 +124,7 @@ impl Esi {
     /// # Example
     /// ```rust,no_run
     /// # async fn run() {
-    /// # use rfesi::EsiBuilder;
+    /// # use rfesi::prelude::*;
     /// # let mut esi = EsiBuilder::new()
     /// #     .user_agent("some user agent")
     /// #     .client_id("your_client_id")
@@ -157,7 +157,7 @@ impl Esi {
     ///
     /// # Example
     /// ```rust,no_run
-    /// # use rfesi::EsiBuilder;
+    /// # use rfesi::prelude::*;
     /// # let mut esi = EsiBuilder::new()
     /// #     .user_agent("some user agent")
     /// #     .client_id("your_client_id")
@@ -196,7 +196,7 @@ impl Esi {
     /// # Example
     /// ```rust,no_run
     /// # async fn run() {
-    /// # use rfesi::EsiBuilder;
+    /// # use rfesi::prelude::*;
     /// # let mut esi = EsiBuilder::new()
     /// #     .user_agent("some user agent")
     /// #     .client_id("your_client_id")
@@ -250,7 +250,7 @@ impl Esi {
     /// ```rust,no_run
     /// # async fn run() {
     /// # use serde::Deserialize;
-    /// # use rfesi::{EsiBuilder, RequestType};
+    /// # use rfesi::prelude::*;
     /// # let mut esi = EsiBuilder::new()
     /// #     .user_agent("some user agent")
     /// #     .client_id("your_client_id")
@@ -341,7 +341,7 @@ impl Esi {
     /// # Example
     /// ```rust,no_run
     /// # async fn run() {
-    /// # use rfesi::EsiBuilder;
+    /// # use rfesi::prelude::*;
     /// # let mut esi = EsiBuilder::new()
     /// #     .user_agent("some user agent")
     /// #     .client_id("your_client_id")
@@ -374,7 +374,7 @@ impl Esi {
     ///
     /// # Example
     /// ```rust,no_run
-    /// # use rfesi::EsiBuilder;
+    /// # use rfesi::prelude::*;
     /// # let mut esi = EsiBuilder::new()
     /// #     .user_agent("some user agent")
     /// #     .client_id("your_client_id")
