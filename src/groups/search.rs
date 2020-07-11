@@ -1,6 +1,6 @@
 #![allow(unused)]
 
-use crate::Esi;
+use crate::prelude::*;
 
 /// Endpoints for Search
 pub struct SearchGroup<'a> {

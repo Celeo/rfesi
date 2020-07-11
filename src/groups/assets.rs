@@ -1,4 +1,4 @@
-use crate::{Esi, EsiResult, RequestType};
+use crate::prelude::*;
 use serde::Deserialize;
 
 /// Endpoints for Assets
