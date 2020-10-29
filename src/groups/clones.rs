@@ -1,5 +1,4 @@
 use crate::prelude::*;
-use serde::Deserialize;
 
 /// Endpoints for Clones
 pub struct ClonesGroup<'a> {

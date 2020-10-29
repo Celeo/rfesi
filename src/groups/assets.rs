@@ -1,5 +1,4 @@
 use crate::prelude::*;
-use serde::Deserialize;
 
 /// Endpoints for Assets
 pub struct AssetsGroup<'a> {

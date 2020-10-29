@@ -1,5 +1,4 @@
 use crate::prelude::*;
-use serde::Deserialize;
 
 /// Endpoints for FactionWarfare
 pub struct FactionWarfareGroup<'a> {
