@@ -15,7 +15,7 @@ Add the latest version to your `Cargo.toml`.
 
 See [the docs](https://docs.rs/rfesi).
 
-Note that adding all of the endpoints would very tedious, so I'm adding endpoints in a rough order of what I think are most useful.
+Note that adding all of the endpoints would very tedious, so not all of them have been implemented. I've added a handful that I found useful, and I will be happy to add missing ones on request. Additionally, I'm happy to take PRs for adding endpoint support.
 
 ## Developing
 
