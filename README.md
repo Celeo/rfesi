@@ -13,9 +13,11 @@ Add the latest version to your `Cargo.toml`.
 
 ## Using
 
-See [the docs](https://docs.rs/rfesi).
+[Docs link](https://docs.rs/rfesi).
 
 Note that adding all of the endpoints would very tedious, so not all of them have been implemented. I've added a handful that I found useful, and I will be happy to add missing ones on request. Additionally, I'm happy to take PRs for adding endpoint support.
+
+In the docs, a [group](https://docs.rs/rfesi/0.8.0/rfesi/groups/index.html) without any endpoints mapped to functions will look like [this](https://docs.rs/rfesi/0.8.0/rfesi/groups/struct.MarketGroup.html): a struct without any functions. This maps to [this file](https://github.com/Celeo/rfesi/blob/0e7a5bfe6118bc8e57d1196afea481b786f4460e/src/groups/market.rs), which does not implement any functions. Contrast that with [this file](https://github.com/Celeo/rfesi/blob/0e7a5bfe6118bc8e57d1196afea481b786f4460e/src/groups/character.rs), which contains a struct with several functions.
 
 ## Developing
 
