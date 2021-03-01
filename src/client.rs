@@ -70,9 +70,9 @@ pub enum RequestType {
 #[derive(Clone, Debug)]
 pub struct Esi {
     pub(crate) version: String,
-    pub(crate) client_id: String,
-    pub(crate) client_secret: String,
-    pub(crate) callback_url: String,
+    pub(crate) client_id: Option<String>,
+    pub(crate) client_secret: Option<String>,
+    pub(crate) callback_url: Option<String>,
     pub(crate) scope: String,
     /// The access token from ESI, if set.
     pub access_token: Option<String>,
@@ -93,15 +93,9 @@ impl Esi {
         // let spec = Esi::get_spec(&client, &version).await?;
         let e = Esi {
             version,
-            client_id: builder
-                .client_id
-                .ok_or_else(|| EsiError::EmptyClientValue("client_id".to_owned()))?,
-            client_secret: builder
-                .client_secret
-                .ok_or_else(|| EsiError::EmptyClientValue("client_secret".to_owned()))?,
-            callback_url: builder
-                .callback_url
-                .ok_or_else(|| EsiError::EmptyClientValue("callback_url".to_owned()))?,
+            client_id: builder.client_id,
+            client_secret: builder.client_secret,
+            callback_url: builder.callback_url,
             scope: builder.scope.unwrap_or_else(|| "".to_owned()),
             access_token: builder.access_token,
             access_expiration: builder.access_expiration,
@@ -153,6 +147,19 @@ impl Esi {
         Ok(())
     }
 
+    fn check_client_info(&self) -> EsiResult<()> {
+        for (name, value) in &[
+            ("client_id", &self.client_id),
+            ("client_secret", &self.client_secret),
+            ("callback_url", &self.callback_url),
+        ] {
+            if value.is_none() {
+                return Err(EsiError::EmptyClientValue(name.to_string()));
+            }
+        }
+        Ok(())
+    }
+
     /// Generate and return the URL required for the user to grant you an auth code.
     ///
     /// # Example
@@ -165,21 +172,40 @@ impl Esi {
     /// #     .callback_url("your_callback_url")
     /// #     .build()
     /// #     .unwrap();
-    /// let url = esi.get_authorize_url();
+    /// let url = esi.get_authorize_url().unwrap();
     /// // then send your user to that URL
     /// ```
-    pub fn get_authorize_url(&self) -> String {
-        format!(
+    ///
+    /// If you opted to not include client information in
+    /// the EsiBuilder flow, then this function will return
+    /// an error instead.
+    ///
+    ///
+    pub fn get_authorize_url(&self) -> EsiResult<String> {
+        if let Err(e) = self.check_client_info() {
+            return Err(e);
+        }
+        Ok(format!(
             "{}?response_type=code&redirect_uri={}&client_id={}&scope={}",
-            AUTHORIZE_URL, self.callback_url, self.client_id, self.scope
-        )
+            AUTHORIZE_URL,
+            self.callback_url.as_ref().unwrap(),
+            self.client_id.as_ref().unwrap(),
+            self.scope
+        ))
     }
 
     fn get_auth_headers(&self) -> EsiResult<HeaderMap> {
+        if let Err(e) = self.check_client_info() {
+            return Err(e);
+        }
         let mut map = HeaderMap::new();
-        let value = base64::encode(format!("{}:{}", self.client_id, self.client_secret))
-            .replace("\n", "")
-            .replace(" ", "");
+        let value = base64::encode(format!(
+            "{}:{}",
+            self.client_id.as_ref().unwrap(),
+            self.client_secret.as_ref().unwrap()
+        ))
+        .replace("\n", "")
+        .replace(" ", "");
         map.insert(
             header::AUTHORIZATION,
             HeaderValue::from_str(&format!("Basic {}", value))?,

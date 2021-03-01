@@ -27,7 +27,7 @@
 //! fn get_authorize_url(esi: &Esi) -> String {
 //!     // Direct your user to this URL, and have a web service listening
 //!     // at the callback URL that you specified in the EVE application.
-//!     esi.get_authorize_url()
+//!     esi.get_authorize_url().unwrap()
 //! }
 //!
 //! async fn authenticate_user(esi: &mut Esi, code: &str) -> EsiResult<()> {

@@ -7,6 +7,7 @@ use std::time::Duration;
 /// Builder for the `Esi` struct.
 ///
 /// # Example
+///
 /// ```rust
 /// # use rfesi::prelude::EsiBuilder;
 /// let mut esi = EsiBuilder::new()
@@ -17,6 +18,26 @@ use std::time::Duration;
 ///     .build()
 ///     .unwrap();
 /// ```
+///
+/// # Not including client info
+///
+/// If you are only making calls to non-authenticated
+/// endpoints, then you don't need to make use of
+/// the authentication flow, which means you don't need
+/// a client ID, client secret, and callback URL.
+/// In this case, you can construct your client without
+/// those parameters:
+///
+/// ```rust
+/// # use rfesi::prelude::EsiBuilder;
+/// let mut esi = EsiBuilder::new()
+///     .user_agent("some user agent")
+///     .build()
+///     .unwrap();
+/// ```
+///
+/// Note that you still need to set the user agent -
+/// this is good API usage behavior.
 #[derive(Clone, Debug, Default)]
 pub struct EsiBuilder {
     pub(crate) version: Option<String>,
@@ -154,9 +175,20 @@ mod tests {
             .build()
             .unwrap();
 
-        assert_eq!(b.client_id, "a");
-        assert_eq!(b.client_secret, "b");
-        assert_eq!(b.callback_url, "c");
+        assert_eq!(b.client_id, Some(String::from("a")));
+        assert_eq!(b.client_secret, Some(String::from("b")));
+        assert_eq!(b.callback_url, Some(String::from("c")));
+        assert_eq!(b.version, "latest");
+        assert_eq!(b.access_token, None);
+    }
+
+    #[test]
+    fn test_builder_no_client() {
+        let b = EsiBuilder::new().user_agent("d").build().unwrap();
+
+        assert_eq!(b.client_id, None);
+        assert_eq!(b.client_secret, None);
+        assert_eq!(b.callback_url, None);
         assert_eq!(b.version, "latest");
         assert_eq!(b.access_token, None);
     }
