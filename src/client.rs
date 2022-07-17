@@ -43,7 +43,7 @@ pub struct WhoAmIResponse {
 /// Which base URL to start with - the public URL for unauthenticated
 /// calls, or the authenticated URL for making calls to endpoints that
 /// require an access token.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum RequestType {
     /// Endpoints that do not require authentication
     Public,
