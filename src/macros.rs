@@ -3,7 +3,8 @@
 ///
 /// # Example
 /// ```rust,no_run
-/// # use rfesi::prelude::*
+/// # use rfesi::prelude::*;
+/// # use rfesi::api_get;
 /// pub struct SomeGroup<'a> {
 ///     pub(crate) esi: &'a Esi,
 /// }
@@ -41,6 +42,7 @@
 ///
 /// ```rust,no_run
 /// # use rfesi::prelude::*;
+/// # use rfesi::api_get;
 /// pub struct SomeGroup<'a> {
 ///     pub(crate) esi: &'a Esi,
 /// }
@@ -82,6 +84,7 @@
 ///
 /// ```rust,no_run
 /// # use rfesi::prelude::*;
+/// # use rfesi::api_get;
 /// pub struct SomeGroup<'a> {
 ///     pub(crate) esi: &'a Esi,
 /// }
@@ -122,6 +125,7 @@
 ///         .await
 /// }
 /// ```
+#[macro_export]
 macro_rules! api_get {
     (
         $(#[$m:meta])*
@@ -200,7 +204,8 @@ macro_rules! api_get {
 /// # Example
 ///
 /// ```rust,no_run
-/// # use rfesi::prelude::*
+/// # use rfesi::prelude::*;
+/// # use rfesi::api_post;
 /// pub struct SomeGroup<'a> {
 ///     pub(crate) esi: &'a Esi,
 /// }
@@ -233,6 +238,7 @@ macro_rules! api_get {
 ///         .await
 /// }
 /// ```
+#[macro_export]
 macro_rules! api_post {
     (
         $(#[$m:meta])*
