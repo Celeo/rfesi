@@ -21,7 +21,7 @@ const SPEC_URL_END: &str = "/swagger.json";
 #[derive(Debug, Deserialize)]
 pub(crate) struct AuthenticateResponse {
     pub(crate) access_token: String,
-    pub(crate) token_type: String,
+    // pub(crate) token_type: String,
     pub(crate) expires_in: u64,
     pub(crate) refresh_token: Option<String>,
 }
@@ -204,8 +204,8 @@ impl Esi {
             self.client_id.as_ref().unwrap(),
             self.client_secret.as_ref().unwrap()
         ))
-        .replace("\n", "")
-        .replace(" ", "");
+        .replace('\n', "")
+        .replace(' ', "");
         map.insert(
             header::AUTHORIZATION,
             HeaderValue::from_str(&format!("Basic {}", value))?,
@@ -333,7 +333,7 @@ impl Esi {
             .client
             .request(Method::from_str(method)?, &url)
             .headers(headers)
-            .query(query.unwrap_or_else(|| &[]));
+            .query(query.unwrap_or(&[]));
         req_builder = match body {
             Some(b) => req_builder.body(b.to_owned()),
             None => req_builder,
