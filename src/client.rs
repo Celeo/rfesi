@@ -182,9 +182,7 @@ impl Esi {
     ///
     ///
     pub fn get_authorize_url(&self) -> EsiResult<String> {
-        if let Err(e) = self.check_client_info() {
-            return Err(e);
-        }
+        self.check_client_info()?;
         Ok(format!(
             "{}?response_type=code&redirect_uri={}&client_id={}&scope={}",
             AUTHORIZE_URL,
@@ -195,17 +193,14 @@ impl Esi {
     }
 
     fn get_auth_headers(&self) -> EsiResult<HeaderMap> {
-        if let Err(e) = self.check_client_info() {
-            return Err(e);
-        }
+        self.check_client_info()?;
         let mut map = HeaderMap::new();
         let value = base64::encode(format!(
             "{}:{}",
             self.client_id.as_ref().unwrap(),
             self.client_secret.as_ref().unwrap()
         ))
-        .replace('\n', "")
-        .replace(' ', "");
+        .replace(['\n', ' '], "");
         map.insert(
             header::AUTHORIZATION,
             HeaderValue::from_str(&format!("Basic {}", value))?,
