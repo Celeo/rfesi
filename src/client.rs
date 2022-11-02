@@ -1,6 +1,6 @@
 //! Main logic
 
-use crate::{groups::*, jwt_util::validate_jwt, prelude::*};
+use crate::{groups::*, prelude::*};
 use log::{debug, error};
 use rand::{distributions::Alphanumeric, Rng};
 use reqwest::{
@@ -222,6 +222,10 @@ impl Esi {
     /// Note that this is one of the functions that requires the struct be
     /// mutable, as the struct mutates to include the resulting access token.
     ///
+    /// If the "validate_jwt" feature is enabled (by default), then the access
+    /// token's claims will be returned as a `serde_json::Value` enum. If
+    /// this feature is not enabled, the returned data will be JSON `null`.
+    ///
     /// # Example
     /// ```rust,no_run
     /// # async fn run() {
@@ -233,10 +237,10 @@ impl Esi {
     /// #     .callback_url("your_callback_url")
     /// #     .build()
     /// #     .unwrap();
-    /// esi.authenticate("abcdef").await.unwrap();
+    /// let claims = esi.authenticate("abcdef...").await.unwrap();
     /// # }
     /// ```
-    pub async fn authenticate(&mut self, code: &str) -> EsiResult<()> {
+    pub async fn authenticate(&mut self, code: &str) -> EsiResult<Value> {
         debug!("Authenticating with code {}", code);
         let resp = self
             .client
@@ -256,11 +260,15 @@ impl Esi {
             return Err(EsiError::InvalidStatusCode(resp.status().as_u16()));
         }
         let data: AuthenticateResponse = resp.json().await?;
-        validate_jwt(&self.client, &data.access_token).await?;
+        debug!("Access token is {}", &data.access_token);
+        #[cfg(feature = "validate_jwt")]
+        let claim_data = crate::jwt_util::validate_jwt(&self.client, &data.access_token).await?;
+        #[cfg(not(feature = "validate_jwt"))]
+        let claim_data = Value::Null;
         self.access_token = Some(data.access_token);
         self.access_expiration = Some(data.expires_in + chrono::Utc::now().timestamp() as u64);
         self.refresh_token = data.refresh_token;
-        Ok(())
+        Ok(claim_data)
     }
 
     /// TODO - https://docs.esi.evetech.net/docs/sso/refreshing_access_tokens.html
