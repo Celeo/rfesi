@@ -12,7 +12,6 @@ use serde_json::Value;
 use std::{collections::HashMap, str::FromStr};
 
 const BASE_URL: &str = "https://esi.evetech.net/";
-const OAUTH_URL: &str = "https://login.eveonline.com/oauth/";
 const AUTHORIZE_URL: &str = "https://login.eveonline.com/v2/oauth/authorize/";
 const TOKEN_URL: &str = "https://login.eveonline.com/v2/oauth/token";
 const SPEC_URL_START: &str = "https://esi.evetech.net/_";
@@ -314,8 +313,8 @@ impl Esi {
         body: Option<&str>,
     ) -> EsiResult<T> {
         debug!(
-            "Making {} request to {:?}{} with query {:?}",
-            method, request_type, endpoint, query
+            "Making {:?} {} request to {} with query: {:?}",
+            request_type, method, endpoint, query
         );
         if request_type == RequestType::Authenticated && self.access_token.is_none() {
             return Err(EsiError::MissingAuthentication);
@@ -337,14 +336,7 @@ impl Esi {
             }
             map
         };
-        let url = format!(
-            "{}{}",
-            match request_type {
-                RequestType::Public => BASE_URL,
-                RequestType::Authenticated => OAUTH_URL,
-            },
-            endpoint
-        );
+        let url = format!("{}{}", BASE_URL, endpoint);
         let mut req_builder = self
             .client
             .request(Method::from_str(method)?, &url)
