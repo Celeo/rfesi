@@ -29,9 +29,6 @@ async fn get_rs256_key(client: &Client) -> EsiResult<String> {
     let keys_url = get_keys_url(client).await?;
     let resp = client.get(&keys_url).send().await?;
     let data: Value = resp.json().await?;
-    for entry in data["keys"].as_array().unwrap() {
-        if entry["alg"].as_str().unwrap() == "RS256" {}
-    }
     let key = data["keys"]
         .as_array()
         .unwrap()
