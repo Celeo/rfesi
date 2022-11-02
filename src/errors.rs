@@ -9,6 +9,10 @@ pub enum EsiError {
     /// invalid when `.build()` is called.
     #[error("Missing required builder struct value '{0}'")]
     EmptyClientValue(String),
+    /// Error that could be thrown if the access token JWT from SSO
+    /// is invalid, whether due to tampering or some other reason.
+    #[error("Invalid JWT returned from SSO: {0}")]
+    InvalidJWT(String),
     /// Error that can be thrown by any function that makes HTTP
     /// calls our to external resources for response codes that
     /// aren't valid as defined [by reqwest].

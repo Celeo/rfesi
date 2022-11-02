@@ -1,19 +1,20 @@
 //! Main logic
 
-use crate::{groups::*, prelude::*};
+use crate::{groups::*, jwt_util::validate_jwt, prelude::*};
 use log::{debug, error};
+use rand::{distributions::Alphanumeric, Rng};
 use reqwest::{
     header::{self, HeaderMap, HeaderValue},
     Client, Method,
 };
 use serde::{de::DeserializeOwned, Deserialize};
-use serde_json::{json, Value};
-use std::str::FromStr;
+use serde_json::Value;
+use std::{collections::HashMap, str::FromStr};
 
 const BASE_URL: &str = "https://esi.evetech.net/";
 const OAUTH_URL: &str = "https://login.eveonline.com/oauth/";
-const AUTHORIZE_URL: &str = "https://login.eveonline.com/oauth/authorize";
-const TOKEN_URL: &str = "https://login.eveonline.com/oauth/token";
+const AUTHORIZE_URL: &str = "https://login.eveonline.com/v2/oauth/authorize/";
+const TOKEN_URL: &str = "https://login.eveonline.com/v2/oauth/token";
 const SPEC_URL_START: &str = "https://esi.evetech.net/_";
 const SPEC_URL_END: &str = "/swagger.json";
 
@@ -21,23 +22,8 @@ const SPEC_URL_END: &str = "/swagger.json";
 #[derive(Debug, Deserialize)]
 pub(crate) struct AuthenticateResponse {
     pub(crate) access_token: String,
-    // pub(crate) token_type: String,
     pub(crate) expires_in: u64,
     pub(crate) refresh_token: Option<String>,
-}
-
-/// Information about the currently-authenticated user.
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "PascalCase")]
-pub struct WhoAmIResponse {
-    #[serde(rename = "CharacterID")]
-    pub character_id: u64,
-    pub character_name: String,
-    pub expires_on: String,
-    pub scopes: String,
-    pub token_type: String,
-    pub character_owner_hash: String,
-    pub intellectual_property: String,
 }
 
 /// Which base URL to start with - the public URL for unauthenticated
@@ -162,6 +148,11 @@ impl Esi {
 
     /// Generate and return the URL required for the user to grant you an auth code.
     ///
+    /// The second item of the returned tuple is the randomly-generated "state" string.
+    /// The ESI docs link to [this auth0 page] to explain. You can inspect the URL
+    /// returned by ESI to your web service to ensure it matches. No checking is done
+    /// by `rfesi`.
+    ///
     /// # Example
     /// ```rust,no_run
     /// # use rfesi::prelude::*;
@@ -172,7 +163,7 @@ impl Esi {
     /// #     .callback_url("your_callback_url")
     /// #     .build()
     /// #     .unwrap();
-    /// let url = esi.get_authorize_url().unwrap();
+    /// let (url, state) = esi.get_authorize_url().unwrap();
     /// // then send your user to that URL
     /// ```
     ///
@@ -180,15 +171,24 @@ impl Esi {
     /// the EsiBuilder flow, then this function will return
     /// an error instead.
     ///
-    ///
-    pub fn get_authorize_url(&self) -> EsiResult<String> {
+    /// [this auth0 page]: https://auth0.com/docs/secure/attack-protection/state-parameters
+    pub fn get_authorize_url(&self) -> EsiResult<(String, String)> {
         self.check_client_info()?;
-        Ok(format!(
-            "{}?response_type=code&redirect_uri={}&client_id={}&scope={}",
-            AUTHORIZE_URL,
-            self.callback_url.as_ref().unwrap(),
-            self.client_id.as_ref().unwrap(),
-            self.scope
+        let state = rand::thread_rng()
+            .sample_iter(&Alphanumeric)
+            .take(10)
+            .map(char::from)
+            .collect();
+        Ok((
+            format!(
+                "{}?response_type=code&redirect_uri={}&client_id={}&scope={}&state={}",
+                AUTHORIZE_URL,
+                self.callback_url.as_ref().unwrap(),
+                self.client_id.as_ref().unwrap(),
+                self.scope,
+                &state
+            ),
+            state,
         ))
     }
 
@@ -204,6 +204,10 @@ impl Esi {
         map.insert(
             header::AUTHORIZATION,
             HeaderValue::from_str(&format!("Basic {}", value))?,
+        );
+        map.insert(
+            header::HOST,
+            HeaderValue::from_static("login.eveonline.com"),
         );
         Ok(map)
     }
@@ -234,10 +238,10 @@ impl Esi {
             .client
             .post(TOKEN_URL)
             .headers(self.get_auth_headers()?)
-            .json(&json!({
-                "grant_type": "authorization_code",
-                "code": code,
-            }))
+            .form(&HashMap::from([
+                ("grant_type", "authorization_code"),
+                ("code", code),
+            ]))
             .send()
             .await?;
         if resp.status() != 200 {
@@ -248,10 +252,16 @@ impl Esi {
             return Err(EsiError::InvalidStatusCode(resp.status().as_u16()));
         }
         let data: AuthenticateResponse = resp.json().await?;
+        validate_jwt(&self.client, &data.access_token).await?;
         self.access_token = Some(data.access_token);
         self.access_expiration = Some(data.expires_in + chrono::Utc::now().timestamp() as u64);
         self.refresh_token = data.refresh_token;
         Ok(())
+    }
+
+    /// TODO - https://docs.esi.evetech.net/docs/sso/refreshing_access_tokens.html
+    pub async fn use_refresh_token(&mut self) -> EsiResult<()> {
+        unimplemented!()
     }
 
     /// Make a request to ESI.
@@ -431,11 +441,7 @@ impl Esi {
         Err(EsiError::UnknownOperationID(op_id.to_owned()))
     }
 
-    /// Gets information on the currently-authenticated user.
-    pub async fn get_whoami_info(&self) -> EsiResult<WhoAmIResponse> {
-        self.query("GET", RequestType::Authenticated, "verify", None, None)
-            .await
-    }
+    // TODO function for getting the access_token's payload
 
     /// Call endpoints under the "alliance" group in ESI.
     pub fn group_alliance(&self) -> AllianceGroup {
@@ -606,7 +612,6 @@ mod tests {
     fn test_authenticateresponse_deserialize() {
         let source = r#"{
             "access_token": "abc",
-            "token_type": "Bearer",
             "expires_in": 1000,
             "refresh_token": "def"
           }"#;
@@ -621,7 +626,6 @@ mod tests {
     fn test_authenticateresponse_deserialize_no_refresh_token() {
         let source = r#"{
             "access_token": "abc",
-            "token_type": "Bearer",
             "expires_in": 1000,
             "refresh_token": null
           }"#;
