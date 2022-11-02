@@ -69,12 +69,16 @@ async fn get_keys(client: &Client) -> EsiResult<Vec<KeyInfo>> {
     Ok(keys)
 }
 
+// TODO handle the "validate_jwt" feature.
+
 /// Decode and validate the SSO JWT, returning the contents.
 pub(crate) async fn validate_jwt(client: &Client, token: &str) -> EsiResult<Claims> {
+    // fetch signing key
     let validation_keys = get_keys(client).await.map_err(|_| {
         EsiError::InvalidJWT(String::from("Could not get validation key information"))
     })?;
     let validation = Validation::new(Algorithm::RS256);
+    // validate and decode
     let token_data = match decode::<Claims>(
         token,
         &DecodingKey::from_secret(
@@ -88,14 +92,13 @@ pub(crate) async fn validate_jwt(client: &Client, token: &str) -> EsiResult<Clai
     ) {
         Ok(c) => c,
         Err(e) => {
-            // TODO currently here
+            // TODO this fails, citing key something or other
             error!("Error validating JWT: {}", e);
             return Err(EsiError::InvalidJWT(String::from("Validation failed")));
         }
     };
 
-    // additional verifications from https://docs.esi.evetech.net/docs/sso/validating_eve_jwt.html
-
+    /* Additional verifications from https://docs.esi.evetech.net/docs/sso/validating_eve_jwt.html */
     if token_data.claims.iss != "login.eveonline.com"
         && token_data.claims.iss != "https://login.eveonline.com"
     {

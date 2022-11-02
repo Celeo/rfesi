@@ -148,10 +148,11 @@ impl Esi {
 
     /// Generate and return the URL required for the user to grant you an auth code.
     ///
-    /// The second item of the returned tuple is the randomly-generated "state" string.
-    /// The ESI docs link to [this auth0 page] to explain. You can inspect the URL
-    /// returned by ESI to your web service to ensure it matches. No checking is done
-    /// by `rfesi`.
+    /// The second item of the returned tuple is the "state". If the default feature
+    /// "random_state" is enabled, this string will be random; otherwise it'll be
+    /// "rfesi_unused". The ESI docs link to [this auth0 page] to explain. You can
+    /// inspect the URL returned by ESI to your web service to ensure it matches.
+    /// No checking is done by `rfesi`.
     ///
     /// # Example
     /// ```rust,no_run
@@ -174,11 +175,14 @@ impl Esi {
     /// [this auth0 page]: https://auth0.com/docs/secure/attack-protection/state-parameters
     pub fn get_authorize_url(&self) -> EsiResult<(String, String)> {
         self.check_client_info()?;
+        #[cfg(feature = "random_state")]
         let state = rand::thread_rng()
             .sample_iter(&Alphanumeric)
             .take(10)
             .map(char::from)
             .collect();
+        #[cfg(not(feature = "random_state"))]
+        let state = "rfesi_unused";
         Ok((
             format!(
                 "{}?response_type=code&redirect_uri={}&client_id={}&scope={}&state={}",

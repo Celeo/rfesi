@@ -17,9 +17,9 @@ categories = ["api-bindings"]
 base64 = "0.13"
 chrono = "0.4.11"
 http = "0.2.1"
-jsonwebtoken = "8.1.1"
+jsonwebtoken = { version = "8.1.1", optional = true }
 log = "0.4.8"
-rand = "0.8.5"
+rand = { version = "0.8.5", optional = true }
 reqwest = { version = "0.11.0", features = ["json"] }
 serde = { version = "1.0.113", features = ["derive"] }
 serde_json = "1.0.55"
@@ -27,3 +27,8 @@ thiserror = "1.0.20"
 
 [dev-dependencies]
 mockito = "0.31"
+
+[features]
+default = ["random_state", "validate_jwt"]
+random_state = ["dep:rand"]
+validate_jwt = ["dep:jsonwebtoken"]
