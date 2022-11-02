@@ -260,7 +260,6 @@ impl Esi {
             return Err(EsiError::InvalidStatusCode(resp.status().as_u16()));
         }
         let data: AuthenticateResponse = resp.json().await?;
-        debug!("Access token is {}", &data.access_token);
         #[cfg(feature = "validate_jwt")]
         let claim_data = crate::jwt_util::validate_jwt(&self.client, &data.access_token).await?;
         #[cfg(not(feature = "validate_jwt"))]

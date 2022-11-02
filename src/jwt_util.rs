@@ -1,6 +1,6 @@
 use crate::prelude::*;
 use alcoholic_jwt::{validate, Validation, JWK};
-use log::{debug, error};
+use log::error;
 use reqwest::Client;
 use serde_json::Value;
 
@@ -21,7 +21,6 @@ async fn get_keys_url(client: &Client) -> EsiResult<String> {
     let url = data["jwks_uri"]
         .as_str()
         .ok_or_else(|| EsiError::InvalidJWT(String::from("Could not get keys URL")))?;
-    debug!("JWT signing keys URL: {}", url);
     Ok(url.to_owned())
 }
 
