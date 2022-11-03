@@ -9,6 +9,17 @@ pub enum EsiError {
     /// invalid when `.build()` is called.
     #[error("Missing required builder struct value '{0}'")]
     EmptyClientValue(String),
+    /// You have to retrieve the ESI spec via `Esi::update_spec`
+    /// before making this call.
+    #[error("Missing spec")]
+    EmptySpec,
+    /// Error that could be thrown if the access token JWT from SSO
+    /// is invalid, whether due to tampering or some other reason.
+    #[error("Invalid JWT: {0}")]
+    InvalidJWT(String),
+    /// Validation of the JWT failed.
+    #[error("JWT validation failed")]
+    JwtValidationFailed(#[from] alcoholic_jwt::ValidationError),
     /// Error that can be thrown by any function that makes HTTP
     /// calls our to external resources for response codes that
     /// aren't valid as defined [by reqwest].

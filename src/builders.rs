@@ -86,7 +86,7 @@ impl EsiBuilder {
 
     /// Set the scope.
     pub fn scope(mut self, val: &str) -> Self {
-        self.scope = Some(val.to_owned());
+        self.scope = Some(val.to_owned().replace(' ', "%20"));
         self
     }
 

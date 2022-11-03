@@ -24,9 +24,10 @@
 //!         .build()
 //! }
 //!
-//! fn get_authorize_url(esi: &Esi) -> String {
-//!     // Direct your user to this URL, and have a web service listening
-//!     // at the callback URL that you specified in the EVE application.
+//! fn get_authorize_url(esi: &Esi) -> (String, String) {
+//!     // Direct your user to the tuple's first item, a URL, and have a web service listening
+//!     // at the callback URL that you specified in the EVE application. The second item is
+//!     // the random state variable, which is up to you to check.
 //!     esi.get_authorize_url().unwrap()
 //! }
 //!
@@ -62,4 +63,6 @@ mod builders;
 mod client;
 mod errors;
 pub mod groups;
+#[cfg(feature = "validate_jwt")]
+mod jwt_util;
 pub mod prelude;

@@ -2,42 +2,34 @@
 
 use crate::{groups::*, prelude::*};
 use log::{debug, error};
+use rand::{distributions::Alphanumeric, Rng};
 use reqwest::{
     header::{self, HeaderMap, HeaderValue},
     Client, Method,
 };
 use serde::{de::DeserializeOwned, Deserialize};
-use serde_json::{json, Value};
-use std::str::FromStr;
+use serde_json::Value;
+use std::{collections::HashMap, str::FromStr};
 
 const BASE_URL: &str = "https://esi.evetech.net/";
-const OAUTH_URL: &str = "https://login.eveonline.com/oauth/";
-const AUTHORIZE_URL: &str = "https://login.eveonline.com/oauth/authorize";
-const TOKEN_URL: &str = "https://login.eveonline.com/oauth/token";
+const AUTHORIZE_URL: &str = "https://login.eveonline.com/v2/oauth/authorize";
+const TOKEN_URL: &str = "https://login.eveonline.com/v2/oauth/token";
 const SPEC_URL_START: &str = "https://esi.evetech.net/_";
 const SPEC_URL_END: &str = "/swagger.json";
 
 /// Response from SSO when exchanging a SSO code for tokens.
 #[derive(Debug, Deserialize)]
-pub(crate) struct AuthenticateResponse {
-    pub(crate) access_token: String,
-    // pub(crate) token_type: String,
-    pub(crate) expires_in: u64,
-    pub(crate) refresh_token: Option<String>,
+struct AuthenticateResponse {
+    access_token: String,
+    expires_in: u64,
+    refresh_token: Option<String>,
 }
 
-/// Information about the currently-authenticated user.
+/// Response from SSO when exchanging a refresh token for access token.
 #[derive(Debug, Deserialize)]
-#[serde(rename_all = "PascalCase")]
-pub struct WhoAmIResponse {
-    #[serde(rename = "CharacterID")]
-    pub character_id: u64,
-    pub character_name: String,
-    pub expires_on: String,
-    pub scopes: String,
-    pub token_type: String,
-    pub character_owner_hash: String,
-    pub intellectual_property: String,
+struct RefreshTokenAuthenticateResponse {
+    access_token: String,
+    expires_in: u64,
 }
 
 /// Which base URL to start with - the public URL for unauthenticated
@@ -147,6 +139,7 @@ impl Esi {
         Ok(())
     }
 
+    /// Ensure the user has specified all required EVE Developer App information.
     fn check_client_info(&self) -> EsiResult<()> {
         for (name, value) in &[
             ("client_id", &self.client_id),
@@ -162,6 +155,12 @@ impl Esi {
 
     /// Generate and return the URL required for the user to grant you an auth code.
     ///
+    /// The second item of the returned tuple is the "state". If the default feature
+    /// "random_state" is enabled, this string will be random; otherwise it'll be
+    /// "rfesi_unused". The ESI docs link to [this auth0 page] to explain. You can
+    /// inspect the URL returned by ESI to your web service to ensure it matches.
+    /// No checking is done by `rfesi`.
+    ///
     /// # Example
     /// ```rust,no_run
     /// # use rfesi::prelude::*;
@@ -172,7 +171,7 @@ impl Esi {
     /// #     .callback_url("your_callback_url")
     /// #     .build()
     /// #     .unwrap();
-    /// let url = esi.get_authorize_url().unwrap();
+    /// let (url, state) = esi.get_authorize_url().unwrap();
     /// // then send your user to that URL
     /// ```
     ///
@@ -180,15 +179,27 @@ impl Esi {
     /// the EsiBuilder flow, then this function will return
     /// an error instead.
     ///
-    ///
-    pub fn get_authorize_url(&self) -> EsiResult<String> {
+    /// [this auth0 page]: https://auth0.com/docs/secure/attack-protection/state-parameters
+    pub fn get_authorize_url(&self) -> EsiResult<(String, String)> {
         self.check_client_info()?;
-        Ok(format!(
-            "{}?response_type=code&redirect_uri={}&client_id={}&scope={}",
-            AUTHORIZE_URL,
-            self.callback_url.as_ref().unwrap(),
-            self.client_id.as_ref().unwrap(),
-            self.scope
+        #[cfg(feature = "random_state")]
+        let state = rand::thread_rng()
+            .sample_iter(&Alphanumeric)
+            .take(10)
+            .map(char::from)
+            .collect();
+        #[cfg(not(feature = "random_state"))]
+        let state = "rfesi_unused";
+        Ok((
+            format!(
+                "{}?response_type=code&redirect_uri={}&client_id={}&scope={}&state={}",
+                AUTHORIZE_URL,
+                self.callback_url.as_ref().unwrap(),
+                self.client_id.as_ref().unwrap(),
+                self.scope,
+                &state
+            ),
+            state,
         ))
     }
 
@@ -205,6 +216,10 @@ impl Esi {
             header::AUTHORIZATION,
             HeaderValue::from_str(&format!("Basic {}", value))?,
         );
+        map.insert(
+            header::HOST,
+            HeaderValue::from_static("login.eveonline.com"),
+        );
         Ok(map)
     }
 
@@ -213,6 +228,10 @@ impl Esi {
     ///
     /// Note that this is one of the functions that requires the struct be
     /// mutable, as the struct mutates to include the resulting access token.
+    ///
+    /// If the "validate_jwt" feature is enabled (by default), then the access
+    /// token's claims will be returned. If the feature is not enabled, then
+    /// the returned value will be `None`.
     ///
     /// # Example
     /// ```rust,no_run
@@ -225,19 +244,19 @@ impl Esi {
     /// #     .callback_url("your_callback_url")
     /// #     .build()
     /// #     .unwrap();
-    /// esi.authenticate("abcdef").await.unwrap();
+    /// let claims = esi.authenticate("abcdef...").await.unwrap();
     /// # }
     /// ```
-    pub async fn authenticate(&mut self, code: &str) -> EsiResult<()> {
+    pub async fn authenticate(&mut self, code: &str) -> EsiResult<Option<TokenClaims>> {
         debug!("Authenticating with code {}", code);
         let resp = self
             .client
             .post(TOKEN_URL)
             .headers(self.get_auth_headers()?)
-            .json(&json!({
-                "grant_type": "authorization_code",
-                "code": code,
-            }))
+            .form(&HashMap::from([
+                ("grant_type", "authorization_code"),
+                ("code", code),
+            ]))
             .send()
             .await?;
         if resp.status() != 200 {
@@ -248,9 +267,63 @@ impl Esi {
             return Err(EsiError::InvalidStatusCode(resp.status().as_u16()));
         }
         let data: AuthenticateResponse = resp.json().await?;
+        #[cfg(feature = "validate_jwt")]
+        let claim_data =
+            Some(crate::jwt_util::validate_jwt(&self.client, &data.access_token).await?);
+        #[cfg(not(feature = "validate_jwt"))]
+        let claim_data = None;
         self.access_token = Some(data.access_token);
         self.access_expiration = Some(data.expires_in + chrono::Utc::now().timestamp() as u64);
         self.refresh_token = data.refresh_token;
+        Ok(claim_data)
+    }
+
+    /// Authenticate via a previously-fetched refresh token.
+    ///
+    /// The functionality of a refresh token allows re-authenticating this struct
+    /// instance without prompting the user to log into EVE SSO again. When the user
+    /// is authenticated in that manner, a refresh token is returned and available
+    /// via the `refresh_token` struct field. Store this securely should you wish
+    /// to later make authenticate calls for that user.
+    ///
+    /// # Example
+    /// ```rust,no_run
+    /// # async fn run() {
+    /// # use rfesi::prelude::*;
+    /// # let mut esi = EsiBuilder::new()
+    /// #     .user_agent("some user agent")
+    /// #     .client_id("your_client_id")
+    /// #     .client_secret("your_client_secret")
+    /// #     .callback_url("your_callback_url")
+    /// #     .build()
+    /// #     .unwrap();
+    /// esi.use_refresh_token("abcdef...").await.unwrap();
+    /// # }
+    /// ```
+    pub async fn use_refresh_token(&mut self, refresh_token: &str) -> EsiResult<()> {
+        // note: don't log the token
+        debug!("Authenticating with refresh token");
+        let resp = self
+            .client
+            .post(TOKEN_URL)
+            .headers(self.get_auth_headers()?)
+            .form(&HashMap::from([
+                ("grant_type", "refresh_token"),
+                ("refresh_token", refresh_token),
+            ]))
+            .send()
+            .await?;
+        if resp.status() != 200 {
+            error!(
+                "Got status {} when making call to authenticate via a refresh token",
+                resp.status()
+            );
+            return Err(EsiError::InvalidStatusCode(resp.status().as_u16()));
+        }
+        let data: RefreshTokenAuthenticateResponse = resp.json().await?;
+        self.access_token = Some(data.access_token);
+        self.access_expiration = Some(data.expires_in);
+        self.refresh_token = Some(refresh_token.to_owned());
         Ok(())
     }
 
@@ -293,13 +366,12 @@ impl Esi {
         body: Option<&str>,
     ) -> EsiResult<T> {
         debug!(
-            "Making {} request to {:?}{} with query {:?}",
-            method, request_type, endpoint, query
+            "Making {:?} {} request to {} with query: {:?}",
+            request_type, method, endpoint, query
         );
         if request_type == RequestType::Authenticated && self.access_token.is_none() {
             return Err(EsiError::MissingAuthentication);
         }
-        // TODO caching
         let headers = {
             let mut map = HeaderMap::new();
             // The 'user-agent' and 'content-type' headers are set in the default headers
@@ -316,14 +388,7 @@ impl Esi {
             }
             map
         };
-        let url = format!(
-            "{}{}",
-            match request_type {
-                RequestType::Public => BASE_URL,
-                RequestType::Authenticated => OAUTH_URL,
-            },
-            endpoint
-        );
+        let url = format!("{}{}", BASE_URL, endpoint);
         let mut req_builder = self
             .client
             .request(Method::from_str(method)?, &url)
@@ -406,6 +471,9 @@ impl Esi {
     /// let endpoint = esi.get_endpoint_for_op_id("get_alliances_alliance_id_contacts_labels").unwrap();
     /// ```
     pub fn get_endpoint_for_op_id(&self, op_id: &str) -> EsiResult<String> {
+        if self.spec.is_none() {
+            return Err(EsiError::EmptySpec);
+        }
         let data = self
             .spec
             .as_ref()
@@ -429,12 +497,6 @@ impl Esi {
             }
         }
         Err(EsiError::UnknownOperationID(op_id.to_owned()))
-    }
-
-    /// Gets information on the currently-authenticated user.
-    pub async fn get_whoami_info(&self) -> EsiResult<WhoAmIResponse> {
-        self.query("GET", RequestType::Authenticated, "verify", None, None)
-            .await
     }
 
     /// Call endpoints under the "alliance" group in ESI.
@@ -606,7 +668,6 @@ mod tests {
     fn test_authenticateresponse_deserialize() {
         let source = r#"{
             "access_token": "abc",
-            "token_type": "Bearer",
             "expires_in": 1000,
             "refresh_token": "def"
           }"#;
@@ -621,7 +682,6 @@ mod tests {
     fn test_authenticateresponse_deserialize_no_refresh_token() {
         let source = r#"{
             "access_token": "abc",
-            "token_type": "Bearer",
             "expires_in": 1000,
             "refresh_token": null
           }"#;
