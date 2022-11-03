@@ -11,7 +11,7 @@ Rust API for the EVE Online ESI
 
 Add the latest version to your `Cargo.toml`.
 
-This crate does have several features that are enabled by default.
+This crate has several features that are enabled by default.
 
 If you don't want or need random SSO state string generation, you can disable the "random_state" feature.
 
