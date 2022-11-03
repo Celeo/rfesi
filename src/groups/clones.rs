@@ -19,7 +19,7 @@ pub struct JumpClone {
     pub jump_clone_id: u64,
     pub location_id: u64,
     pub location_type: String,
-    pub name: String,
+    pub name: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
