@@ -7,6 +7,30 @@ use serde_json::Value;
 const TOKEN_AUTH_INFO_URL: &str =
     "https://login.eveonline.com/.well-known/oauth-authorization-server";
 
+/// Access token (JWT) payload.
+///
+/// For more information on the content of this struct, see
+/// the [ESI documentation].
+///
+/// [ESI documentation]: https://docs.esi.evetech.net/docs/sso/validating_eve_jwt.html
+#[derive(Debug, Deserialize)]
+#[allow(missing_docs)]
+pub struct TokenClaims {
+    pub aud: String,
+    pub azp: String,
+    pub exp: i64,
+    pub iat: i64,
+    pub iss: String,
+    pub jti: String,
+    pub kid: String,
+    pub name: String,
+    pub owner: String,
+    pub region: String,
+    pub sub: String,
+    pub tenant: String,
+    pub tier: String,
+}
+
 /// Get the URL that hosts the valid JWT signing keys.
 async fn get_keys_url(client: &Client) -> EsiResult<String> {
     let resp = client.get(TOKEN_AUTH_INFO_URL).send().await?;
@@ -41,7 +65,7 @@ async fn get_rs256_key(client: &Client) -> EsiResult<String> {
 }
 
 /// Decode and validate the SSO JWT, returning the contents.
-pub(crate) async fn validate_jwt(client: &Client, token: &str) -> EsiResult<Value> {
+pub(crate) async fn validate_jwt(client: &Client, token: &str) -> EsiResult<TokenClaims> {
     let validation_key_str = get_rs256_key(client).await?;
     let validation_key: JWK = serde_json::from_str(&validation_key_str)?;
     let validations = vec![Validation::SubjectPresent, Validation::NotExpired];
@@ -59,5 +83,6 @@ pub(crate) async fn validate_jwt(client: &Client, token: &str) -> EsiResult<Valu
             "JWT audience field is incorrect",
         )));
     }
-    Ok(token.claims)
+    let token_claims = serde_json::from_value(token.claims)?;
+    Ok(token_claims)
 }

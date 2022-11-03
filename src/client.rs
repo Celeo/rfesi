@@ -222,8 +222,8 @@ impl Esi {
     /// mutable, as the struct mutates to include the resulting access token.
     ///
     /// If the "validate_jwt" feature is enabled (by default), then the access
-    /// token's claims will be returned as a `serde_json::Value` enum. If
-    /// this feature is not enabled, the returned data will be JSON `null`.
+    /// token's claims will be returned. If the feature is not enabled, then
+    /// the returned value will be `None`.
     ///
     /// # Example
     /// ```rust,no_run
@@ -239,7 +239,7 @@ impl Esi {
     /// let claims = esi.authenticate("abcdef...").await.unwrap();
     /// # }
     /// ```
-    pub async fn authenticate(&mut self, code: &str) -> EsiResult<Value> {
+    pub async fn authenticate(&mut self, code: &str) -> EsiResult<Option<TokenClaims>> {
         debug!("Authenticating with code {}", code);
         let resp = self
             .client
@@ -260,9 +260,10 @@ impl Esi {
         }
         let data: AuthenticateResponse = resp.json().await?;
         #[cfg(feature = "validate_jwt")]
-        let claim_data = crate::jwt_util::validate_jwt(&self.client, &data.access_token).await?;
+        let claim_data =
+            Some(crate::jwt_util::validate_jwt(&self.client, &data.access_token).await?);
         #[cfg(not(feature = "validate_jwt"))]
-        let claim_data = Value::Null;
+        let claim_data = None;
         self.access_token = Some(data.access_token);
         self.access_expiration = Some(data.expires_in + chrono::Utc::now().timestamp() as u64);
         self.refresh_token = data.refresh_token;
