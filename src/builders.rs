@@ -2,6 +2,7 @@
 
 use crate::prelude::*;
 use reqwest::{header, Client};
+use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
 /// Builder for the `Esi` struct.
@@ -38,7 +39,7 @@ use std::time::Duration;
 ///
 /// Note that you still need to set the user agent -
 /// this is good API usage behavior.
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, PartialEq)]
 pub struct EsiBuilder {
     pub(crate) version: Option<String>,
     pub(crate) client_id: Option<String>,
@@ -199,5 +200,41 @@ mod tests {
         assert!(res.is_err());
         let s = format!("{}", res.unwrap_err());
         assert_eq!(s, "Missing required builder struct value 'user_agent'");
+    }
+
+    #[test]
+    fn test_builder_to_json_empty() {
+        let json = r#"{"version":null,"client_id":null,"client_secret":null,"callback_url":null,"scope":null,"access_token":null,"access_expiration":null,"refresh_token":null,"user_agent":null,"http_timeout":null}"#;
+        assert_eq!(json, serde_json::to_string(&EsiBuilder::new()).unwrap());
+    }
+
+    #[test]
+    fn test_builder_from_json_filled() {
+        let json = r#"{
+            "version": "latest",
+            "client_id": "a",
+            "client_secret": "b",
+            "callback_url": "c",
+            "scope": "d",
+            "access_token": "e",
+            "access_expiration": 1,
+            "refresh_token": "f",
+            "user_agent": "g",
+            "http_timeout": 60000
+          }"#;
+        let actual: EsiBuilder = serde_json::from_str(json).unwrap();
+        let expected = EsiBuilder::new()
+            .version("latest")
+            .client_id("a")
+            .client_secret("b")
+            .callback_url("c")
+            .scope("d")
+            .access_token(Some("e"))
+            .access_expiration(Some(1))
+            .refresh_token(Some("f"))
+            .user_agent("g")
+            .http_timeout(Some(60_000));
+
+        assert_eq!(actual, expected);
     }
 }
