@@ -1,0 +1,5 @@
+[hooks]
+pre-push = "cargo t && cargo +nightly clippy"
+
+[logging]
+verbose = true

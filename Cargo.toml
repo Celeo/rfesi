@@ -28,6 +28,7 @@ thiserror = "1.0.20"
 [dev-dependencies]
 mockito = "0.31"
 pretty_env_logger = "0.4.0"
+rusty-hook = "0.11.2"
 tokio = { version = "1.21.2", features = ["full"] }
 
 [features]
