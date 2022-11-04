@@ -6,7 +6,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     pretty_env_logger::init();
 
     let _esi = EsiBuilder::new()
-        .user_agent("github.com/celeo/rfesi :: example :: unauthorized_requests")
+        .user_agent("github.com/celeo/rfesi :: example :: auth_from_refresh_token")
         .client_id("abc")
         .client_secret("def")
         .callback_url("http://localhost:5000/esi/callback")
