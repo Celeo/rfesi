@@ -30,6 +30,7 @@ struct AuthenticateResponse {
 struct RefreshTokenAuthenticateResponse {
     access_token: String,
     expires_in: u64,
+    refresh_token: String,
 }
 
 /// Which base URL to start with - the public URL for unauthenticated
@@ -323,7 +324,7 @@ impl Esi {
         let data: RefreshTokenAuthenticateResponse = resp.json().await?;
         self.access_token = Some(data.access_token);
         self.access_expiration = Some(data.expires_in);
-        self.refresh_token = Some(refresh_token.to_owned());
+        self.refresh_token = Some(data.refresh_token);
         Ok(())
     }
 
