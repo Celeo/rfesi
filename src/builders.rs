@@ -39,7 +39,7 @@ use std::time::Duration;
 ///
 /// Note that you still need to set the user agent -
 /// this is good API usage behavior.
-#[derive(Clone, Debug, Default, Deserialize, Serialize, PartialEq)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, PartialEq, Eq)]
 pub struct EsiBuilder {
     pub(crate) version: Option<String>,
     pub(crate) client_id: Option<String>,
