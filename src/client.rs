@@ -9,7 +9,11 @@ use reqwest::{
 };
 use serde::{de::DeserializeOwned, Deserialize};
 use serde_json::Value;
-use std::{collections::HashMap, str::FromStr};
+use std::{
+    collections::HashMap,
+    str::FromStr,
+    time::{SystemTime, UNIX_EPOCH},
+};
 
 const BASE_URL: &str = "https://esi.evetech.net/";
 const AUTHORIZE_URL: &str = "https://login.eveonline.com/v2/oauth/authorize";
@@ -29,7 +33,7 @@ struct AuthenticateResponse {
 #[derive(Debug, Deserialize)]
 struct RefreshTokenAuthenticateResponse {
     access_token: String,
-    expires_in: u64,
+    expires_in: u16,
     refresh_token: String,
 }
 
@@ -69,8 +73,8 @@ pub struct Esi {
     pub(crate) scope: String,
     /// The access token from ESI, if set.
     pub access_token: Option<String>,
-    /// The expiration timestamp of the access token, if set.
-    pub access_expiration: Option<u64>,
+    /// The millisecond unix timestamp after which the access token expires, if present.
+    pub access_expiration: Option<u128>,
     /// The refresh token from ESI, if set.
     pub refresh_token: Option<String>,
     /// HTTP client
@@ -83,7 +87,6 @@ impl Esi {
     pub(crate) fn from_builder(builder: EsiBuilder) -> EsiResult<Self> {
         let client = builder.construct_client()?;
         let version = builder.version.unwrap_or_else(|| "latest".to_owned());
-        // let spec = Esi::get_spec(&client, &version).await?;
         let e = Esi {
             version,
             client_id: builder.client_id,
@@ -274,7 +277,7 @@ impl Esi {
         #[cfg(not(feature = "validate_jwt"))]
         let claim_data = None;
         self.access_token = Some(data.access_token);
-        self.access_expiration = Some(data.expires_in + chrono::Utc::now().timestamp() as u64);
+        self.access_expiration = Some((data.expires_in as u128) + current_time_millis()?);
         self.refresh_token = data.refresh_token;
         Ok(claim_data)
     }
@@ -323,7 +326,7 @@ impl Esi {
         }
         let data: RefreshTokenAuthenticateResponse = resp.json().await?;
         self.access_token = Some(data.access_token);
-        self.access_expiration = Some(data.expires_in);
+        self.access_expiration = Some((data.expires_in as u128) + current_time_millis()?);
         self.refresh_token = Some(data.refresh_token);
         Ok(())
     }
@@ -370,8 +373,13 @@ impl Esi {
             "Making {:?} {} request to {} with query: {:?}",
             request_type, method, endpoint, query
         );
-        if request_type == RequestType::Authenticated && self.access_token.is_none() {
-            return Err(EsiError::MissingAuthentication);
+        if request_type == RequestType::Authenticated {
+            if self.access_token.is_none() {
+                return Err(EsiError::MissingAuthentication);
+            }
+            if self.access_expiration.unwrap() > current_time_millis()? {
+                return Err(EsiError::AccessTokenExpired);
+            }
         }
         let headers = {
             let mut map = HeaderMap::new();
@@ -659,6 +667,11 @@ impl Esi {
     pub fn group_wars(&self) -> WarsGroup {
         WarsGroup { esi: self }
     }
+}
+
+/// Get the current system timestamp since the epoch.
+fn current_time_millis() -> Result<u128, EsiError> {
+    Ok(SystemTime::now().duration_since(UNIX_EPOCH)?.as_millis())
 }
 
 #[cfg(test)]

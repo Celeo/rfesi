@@ -48,6 +48,14 @@ pub enum EsiError {
     /// Error for being unable to parse JSON from anywhere.
     #[error("Failed to serialize/deserialize JSON")]
     FailedJsonParse(#[from] serde_json::Error),
+    /// Error for being unable to get the current timestamp.
+    #[error("Could not get current timestamp: {0}")]
+    Timestamp(#[from] std::time::SystemTimeError),
+    /// Error for the access token being used after expiring (and therefore
+    /// being unable to be used for ESI) and no refresh token being present
+    /// to fetch another access token.
+    #[error("Access token is expired, and no refresh token is present")]
+    AccessTokenExpired,
 }
 
 /// Crate `Result` wrapper.
