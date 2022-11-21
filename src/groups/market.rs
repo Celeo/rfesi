@@ -30,6 +30,14 @@ pub struct MarketOrder {
     pub volume_total: i32,
 }
 
+#[derive(Debug, Deserialize)]
+#[allow(missing_docs)]
+pub struct PriceItem {
+    pub adjusted_price: f64,
+    pub average_price: f64,
+    pub type_id: i32
+}
+
 /// Endpoints for Market
 pub struct MarketGroup<'a> {
     pub(crate) esi: &'a Esi,
@@ -56,5 +64,13 @@ impl<'a> MarketGroup<'a> {
         Optional(order_type: String) => "order_type",
         Optional(page: i32) => "page",
         Optional(type_id: i32) => "type_id"
+    );
+
+    api_get!(
+        /// Get a list of average and adjusted prices
+        get_market_prices,
+        "get_market_prices",
+        RequestType::Public,
+        Vec<PriceItem>,
     );
 }
