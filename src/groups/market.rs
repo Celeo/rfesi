@@ -33,9 +33,9 @@ pub struct MarketOrder {
 #[derive(Debug, Deserialize)]
 #[allow(missing_docs)]
 pub struct PriceItem {
-    pub adjusted_price: f64,
-    pub average_price: f64,
-    pub type_id: i32
+    pub adjusted_price: Option<f64>,
+    pub average_price: Option<f64>,
+    pub type_id: i32,
 }
 
 /// Endpoints for Market
@@ -69,7 +69,7 @@ impl<'a> MarketGroup<'a> {
     api_get!(
         /// Get a list of average and adjusted prices
         get_market_prices,
-        "get_market_prices",
+        "get_markets_prices",
         RequestType::Public,
         Vec<PriceItem>,
     );
