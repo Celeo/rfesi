@@ -33,8 +33,8 @@ pub struct MarketOrder {
 #[derive(Debug, Deserialize)]
 #[allow(missing_docs)]
 pub struct PriceItem {
-    pub adjusted_price: f64,
-    pub average_price: f64,
+    pub adjusted_price: Option<f64>,
+    pub average_price: Option<f64>,
     pub type_id: i32
 }
 
@@ -69,8 +69,24 @@ impl<'a> MarketGroup<'a> {
     api_get!(
         /// Get a list of average and adjusted prices
         get_market_prices,
-        "get_market_prices",
+        "get_markets_prices",
         RequestType::Public,
         Vec<PriceItem>,
     );
+}
+
+#[cfg(test)]
+mod tests {
+    use log::{debug, info};
+    use crate::prelude::{EsiBuilder, EsiError};
+
+    #[tokio::test]
+    async fn test_get_market_prices() -> Result<(), Box<dyn std::error::Error>> {
+        let mut esi = EsiBuilder::new()
+            .user_agent("github.com/celeo/rfesi :: tests :: market_prices").build()?;
+        esi.update_spec().await?;
+        let price_items = esi.group_market().get_market_prices().await?;
+        info!("Downloaded {} price items", price_items.len());
+        Ok(())
+    }
 }
