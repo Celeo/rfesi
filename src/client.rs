@@ -218,7 +218,7 @@ impl Esi {
         .replace(['\n', ' '], "");
         map.insert(
             header::AUTHORIZATION,
-            HeaderValue::from_str(&format!("Basic {}", value))?,
+            HeaderValue::from_str(&format!("Basic {value}"))?,
         );
         map.insert(
             header::HOST,
@@ -390,14 +390,14 @@ impl Esi {
                 Some(at) => {
                     map.insert(
                         header::AUTHORIZATION,
-                        HeaderValue::from_str(&format!("Bearer {}", at))?,
+                        HeaderValue::from_str(&format!("Bearer {at}"))?,
                     );
                 }
                 None => (),
             }
             map
         };
-        let url = format!("{}{}", BASE_URL, endpoint);
+        let url = format!("{BASE_URL}{endpoint}");
         let mut req_builder = self
             .client
             .request(Method::from_str(method)?, &url)
