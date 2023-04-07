@@ -21,7 +21,7 @@ pub struct CharacterPublicInfo {
 
 #[derive(Debug, Deserialize)]
 #[allow(missing_docs)]
-pub struct CorporationHistoryItem {
+pub struct CharacterCorporationHistoryItem {
     pub corporation_id: u64,
     pub record_id: u64,
     pub start_date: String,
@@ -59,7 +59,7 @@ impl<'a> CharacterGroup<'a> {
         get_history,
         "get_characters_character_id_corporationhistory",
         RequestType::Public,
-        Vec<CorporationHistoryItem>,
+        Vec<CharacterCorporationHistoryItem>,
         (character_id: u64) => "{character_id}"
     );
 
