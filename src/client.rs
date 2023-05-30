@@ -279,7 +279,8 @@ impl Esi {
         #[cfg(not(feature = "validate_jwt"))]
         let claim_data = None;
         self.access_token = Some(data.access_token);
-        self.access_expiration = Some((data.expires_in as u128) + current_time_millis()?);
+        // the response's "expires_in" field is seconds, need millis
+        self.access_expiration = Some((data.expires_in as u128 * 1_000) + current_time_millis()?);
         self.refresh_token = data.refresh_token;
         Ok(claim_data)
     }
@@ -328,7 +329,8 @@ impl Esi {
         }
         let data: RefreshTokenAuthenticateResponse = resp.json().await?;
         self.access_token = Some(data.access_token);
-        self.access_expiration = Some((data.expires_in as u128) + current_time_millis()?);
+        // the response's "expires_in" field is seconds, need millis
+        self.access_expiration = Some((data.expires_in as u128 * 1_000) + current_time_millis()?);
         self.refresh_token = Some(data.refresh_token);
         Ok(())
     }
@@ -379,7 +381,7 @@ impl Esi {
             if self.access_token.is_none() {
                 return Err(EsiError::MissingAuthentication);
             }
-            if self.access_expiration.unwrap() > current_time_millis()? {
+            if self.access_expiration.unwrap() < current_time_millis()? {
                 return Err(EsiError::AccessTokenExpired);
             }
         }
