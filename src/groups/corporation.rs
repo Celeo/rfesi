@@ -6,22 +6,24 @@ pub struct CorporationPublicInfo {
     pub alliance_id: Option<u64>,
     pub ceo_id: u64,
     pub creator_id: u64,
-    pub date_founded: String,
-    pub description: String,
-    pub home_station_id: u64,
+    pub date_founded: Option<String>,
+    pub description: Option<String>,
+    pub faction_id: Option<u64>,
+    pub home_station_id: Option<u64>,
     pub member_count: u64,
     pub name: String,
-    pub shares: u64,
+    pub shares: Option<u64>,
     pub tax_rate: f32,
-    pub ticket: String,
-    pub url: String,
-    pub war_eligible: bool,
+    pub ticker: Option<String>,
+    pub url: Option<String>,
+    pub war_eligible: Option<bool>,
 }
 
 #[derive(Debug, Deserialize)]
 #[allow(missing_docs)]
 pub struct CorporationHistoryItem {
-    pub alliance_id: u64,
+    pub alliance_id: Option<u64>,
+    pub is_deleted: Option<bool>,
     pub record_id: u64,
     pub start_date: String,
 }

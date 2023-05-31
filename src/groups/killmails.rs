@@ -7,15 +7,22 @@ pub struct KillmailsGroup<'a> {
 
 #[derive(Debug, Deserialize)]
 #[allow(missing_docs)]
+pub struct RecentKillMail {
+    pub killmail_hash: String,
+    pub killmail_id: i32,
+}
+
+#[derive(Debug, Deserialize)]
+#[allow(missing_docs)]
 pub struct KillmailAttacker {
-    pub alliance_id: u64,
-    pub character_id: u64,
-    pub corporation_id: u64,
+    pub alliance_id: Option<u64>,
+    pub character_id: Option<u64>,
+    pub corporation_id: Option<u64>,
     pub damage_done: u64,
     pub final_blow: bool,
     pub security_status: f64,
-    pub ship_type_id: u64,
-    pub weapon_type_id: u64,
+    pub ship_type_id: Option<u64>,
+    pub weapon_type_id: Option<u64>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -23,18 +30,20 @@ pub struct KillmailAttacker {
 pub struct KillmailItem {
     pub flag: u64,
     pub item_type_id: u64,
-    pub quantity_dropped: u64,
-    pub singleton: u8,
+    pub quantity_destroyed: Option<u64>,
+    pub quantity_dropped: Option<u64>,
+    pub singleton: u32,
 }
 
 #[derive(Debug, Deserialize)]
 #[allow(missing_docs)]
 pub struct KillmailVictim {
-    pub character_id: u64,
-    pub corporation_id: u64,
+    pub alliance_id: Option<u32>,
+    pub character_id: Option<u64>,
+    pub corporation_id: Option<u64>,
     pub damage_taken: u64,
-    pub faction_id: u64,
-    pub items: Vec<KillmailItem>,
+    pub faction_id: Option<u64>,
+    pub items: Option<Vec<KillmailItem>>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -43,6 +52,7 @@ pub struct Killmail {
     pub killmail_id: u64,
     pub killmail_type: String,
     pub solar_system_id: u64,
+    pub moon_id: Option<i32>,
     pub attackers: Vec<KillmailAttacker>,
     pub victim: KillmailVictim,
 }
@@ -54,7 +64,7 @@ impl<'a> KillmailsGroup<'a> {
         get_character_recent,
         "get_characters_character_id_killmails_recent",
         RequestType::Authenticated,
-        Vec<serde_json::Value>,
+        Vec<RecentKillMail>,
         (character_id: u64) => "{character_id}"
     );
 

@@ -8,8 +8,8 @@ pub struct FactionWarfareGroup<'a> {
 #[derive(Debug, Deserialize)]
 #[allow(missing_docs)]
 pub struct FactionLeaderboardItem {
-    pub amount: u64,
-    pub faction_id: u64,
+    pub amount: Option<u64>,
+    pub faction_id: Option<u64>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -74,18 +74,18 @@ pub struct FWCorporationLeaderboards {
 #[derive(Debug, Deserialize)]
 #[allow(missing_docs)]
 pub struct FWStatsItemRange {
-    pub total: u64,
-    pub last_week: u64,
-    pub yesterday: u64,
+    pub total: u32,
+    pub last_week: u32,
+    pub yesterday: u32,
 }
 
 #[derive(Debug, Deserialize)]
 #[allow(missing_docs)]
 pub struct FWStatsItem {
-    pub faction_id: u64,
+    pub faction_id: u32,
     pub kills: FWStatsItemRange,
-    pub pilots: u64,
-    pub systems_controlled: u64,
+    pub pilots: u32,
+    pub systems_controlled: u32,
     pub victory_points: FWStatsItemRange,
 }
 
@@ -93,18 +93,18 @@ pub struct FWStatsItem {
 #[allow(missing_docs)]
 pub struct FWSystem {
     pub contested: String,
-    pub occupier_faction_id: u64,
-    pub owner_faction_id: u64,
-    pub solar_system_id: u64,
-    pub victory_points: u64,
-    pub victory_points_threshold: u64,
+    pub occupier_faction_id: u8,
+    pub owner_faction_id: u32,
+    pub solar_system_id: u32,
+    pub victory_points: u32,
+    pub victory_points_threshold: u32,
 }
 
 #[derive(Debug, Deserialize)]
 #[allow(missing_docs)]
 pub struct FWWar {
-    pub faction_id: u64,
-    pub against_id: u64,
+    pub faction_id: u32,
+    pub against_id: u32,
 }
 
 impl<'a> FactionWarfareGroup<'a> {

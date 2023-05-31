@@ -8,6 +8,7 @@ pub struct AssetsGroup<'a> {
 #[derive(Debug, Deserialize)]
 #[allow(missing_docs)]
 pub struct Asset {
+    pub is_blueprint_copy: Option<bool>,
     pub is_singleton: bool,
     pub item_id: u64,
     pub location_flag: String,
@@ -69,7 +70,6 @@ impl<'a> AssetsGroup<'a> {
         item_ids: &[u64],
     );
 
-    // NOTE: assuming return type; don't have the permissions to check
     api_get!(
         /// Get a corporation's assets.
         ///
@@ -77,7 +77,7 @@ impl<'a> AssetsGroup<'a> {
         get_corporation_assets,
         "get_corporations_corporation_id_assets",
         RequestType::Authenticated,
-        Vec<u64>,
+        Vec<Asset>,
         (corporation_id: u64) => "{corporation_id}"
     );
 

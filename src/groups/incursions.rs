@@ -11,9 +11,9 @@ pub struct Incursion {
     pub constellation_id: u64,
     pub faction_id: u64,
     pub has_boss: bool,
-    pub infested_solar_systems: Vec<u64>,
+    pub infested_solar_systems: Vec<u32>,
     pub influence: f64,
-    pub staging_solar_system_id: i64,
+    pub staging_solar_system_id: u64,
     pub state: String,
     #[serde(rename = "type")]
     pub incursion_type: String,

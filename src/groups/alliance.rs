@@ -11,7 +11,8 @@ pub struct AllianceInfo {
     pub creator_corporation_id: u64,
     pub creator_id: u64,
     pub date_founded: String,
-    pub executor_corporation_id: u64,
+    pub executor_corporation_id: Option<u32>,
+    pub faction_id: Option<u32>,
     pub name: String,
     pub ticker: String,
 }
@@ -19,8 +20,8 @@ pub struct AllianceInfo {
 #[derive(Debug, Deserialize)]
 #[allow(missing_docs)]
 pub struct AllianceIcons {
-    pub px128x128: String,
-    pub px64x64: String,
+    pub px128x128: Option<String>,
+    pub px64x64: Option<String>,
 }
 
 impl<'a> AllianceGroup<'a> {
@@ -29,7 +30,7 @@ impl<'a> AllianceGroup<'a> {
         list_ids,
         "get_alliances",
         RequestType::Public,
-        Vec<u64>,
+        Vec<u32>,
     );
 
     api_get!(
@@ -46,7 +47,7 @@ impl<'a> AllianceGroup<'a> {
         get_alliance_corporations,
         "get_alliances_alliance_id_corporations",
         RequestType::Public,
-        Vec<u64>,
+        Vec<u32>,
         (alliance_id: u64) => "{alliance_id}"
     );
 

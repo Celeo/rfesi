@@ -10,14 +10,15 @@ pub struct LocationGroup<'a> {
 pub struct LocationInfo {
     pub solar_system_id: u64,
     pub station_id: Option<u64>,
+    pub structure_id: Option<u64>,
 }
 
 #[derive(Debug, Deserialize)]
 #[allow(missing_docs)]
 pub struct OnlineStatus {
-    pub last_login: String,
-    pub last_logout: String,
-    pub logins: u64,
+    pub last_login: Option<String>,
+    pub last_logout: Option<String>,
+    pub logins: Option<u64>,
     pub online: bool,
 }
 

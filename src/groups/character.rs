@@ -8,21 +8,23 @@ pub struct CharacterGroup<'a> {
 #[derive(Debug, Deserialize)]
 #[allow(missing_docs)]
 pub struct CharacterPublicInfo {
-    pub alliance_id: u64,
+    pub alliance_id: Option<u64>,
     pub birthday: String,
     pub bloodline_id: u64,
     pub corporation_id: u64,
-    pub description: String,
+    pub description: Option<String>,
     pub gender: String,
     pub name: String,
     pub race_id: u16,
-    pub security_status: f64,
+    pub security_status: Option<f64>,
+    pub title: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
 #[allow(missing_docs)]
 pub struct CharacterCorporationHistoryItem {
     pub corporation_id: u64,
+    pub is_deleted: Option<bool>,
     pub record_id: u64,
     pub start_date: String,
 }
@@ -30,18 +32,19 @@ pub struct CharacterCorporationHistoryItem {
 #[derive(Debug, Deserialize)]
 #[allow(missing_docs)]
 pub struct CharacterPortraitInfo {
-    pub px128x128: String,
-    pub px256x256: String,
-    pub px512x512: String,
-    pub px64x64: String,
+    pub px128x128: Option<String>,
+    pub px256x256: Option<String>,
+    pub px512x512: Option<String>,
+    pub px64x64: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
 #[allow(missing_docs)]
 pub struct CharacterAffiliation {
-    pub alliance_id: u64,
-    pub character: u64,
-    pub corporation: u64,
+    pub alliance_id: Option<u64>,
+    pub character_id: u64,
+    pub corporation_id: u64,
+    pub faction_id: Option<u64>,
 }
 
 impl<'a> CharacterGroup<'a> {

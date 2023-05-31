@@ -47,7 +47,7 @@ pub struct SystemPlanet {
 pub struct System {
     constellation_id: i32,
     name: String,
-    planets: Vec<SystemPlanet>,
+    planets: Option<Vec<SystemPlanet>>,
     position: Position,
     security_class: Option<String>,
     security_status: f64,
