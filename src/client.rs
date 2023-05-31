@@ -421,7 +421,8 @@ impl Esi {
             );
             return Err(EsiError::InvalidStatusCode(resp.status().as_u16()));
         }
-        let data: T = resp.json().await?;
+        let text = resp.text().await?;
+        let data: T = serde_json::from_str(&text)?;
         Ok(data)
     }
 

@@ -46,7 +46,7 @@ pub enum EsiError {
     #[error("Error occurred while parsing the Swagger spec at: {0}")]
     FailedSpecParse(String),
     /// Error for being unable to parse JSON from anywhere.
-    #[error("Failed to serialize/deserialize JSON")]
+    #[error("Failed to serialize/deserialize JSON; this may be due to unexpected data or invalid struct field(s)")]
     FailedJsonParse(#[from] serde_json::Error),
     /// Error for being unable to get the current timestamp.
     #[error("Could not get current timestamp: {0}")]
