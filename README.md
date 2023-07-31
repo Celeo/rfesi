@@ -42,8 +42,6 @@ cd rfesi
 cargo test
 ```
 
-If you have [Just](https://github.com/casey/just), then running `just` in the project will check for compilation and clippy violations.
-
 ## License
 
 Licensed under either of
