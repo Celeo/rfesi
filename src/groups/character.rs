@@ -47,6 +47,19 @@ pub struct CharacterAffiliation {
     pub faction_id: Option<u64>,
 }
 
+#[derive(Debug, Deserialize)]
+#[allow(missing_docs)]
+pub struct Blueprint {
+    pub item_id: u64,
+    pub location_flag: String,
+    pub location_id: u64,
+    pub material_efficiency: u8,
+    pub quantity: i32,
+    pub runs: i64,
+    pub time_efficiency: u8,
+    pub type_id: u64,
+}
+
 impl<'a> CharacterGroup<'a> {
     api_get!(
         /// Get a character's public information.
@@ -83,6 +96,15 @@ impl<'a> CharacterGroup<'a> {
         Vec<CharacterAffiliation>,
         ,
         character_ids: &[u64],
+    );
+
+    api_get!(
+        /// Get character blueprints.
+        get_blueprints,
+        "get_characters_character_id_blueprints",
+        RequestType::Authenticated,
+        Vec<Blueprint>,
+        (character_id: u64) => "{character_id}"
     );
 
     // more endpoints ...
