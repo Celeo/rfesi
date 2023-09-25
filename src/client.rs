@@ -3,6 +3,7 @@
 use crate::{groups::*, prelude::*};
 use base64::engine::{general_purpose::STANDARD as base64, Engine};
 use log::{debug, error};
+#[cfg(feature = "random_state")]
 use rand::{distributions::Alphanumeric, Rng};
 use reqwest::{
     header::{self, HeaderMap, HeaderValue},

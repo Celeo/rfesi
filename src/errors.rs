@@ -18,6 +18,7 @@ pub enum EsiError {
     #[error("Invalid JWT: {0}")]
     InvalidJWT(String),
     /// Validation of the JWT failed.
+    #[cfg(feature = "validate_jwt")]
     #[error("JWT validation failed")]
     JwtValidationFailed(#[from] alcoholic_jwt::ValidationError),
     /// Error that can be thrown by any function that makes HTTP
