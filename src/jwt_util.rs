@@ -78,10 +78,19 @@ pub(crate) async fn validate_jwt(client: &Client, token: &str) -> EsiResult<Toke
             "JWT issuer is incorrect",
         )));
     }
-    if token.claims["aud"].as_str().unwrap() != "EVE Online" {
-        return Err(EsiError::InvalidJWT(String::from(
-            "JWT audience field is incorrect",
-        )));
+    match token.claims["aud"].as_str() {
+        Some(aud) => {
+            if aud != "EVE Online" {
+                return Err(EsiError::InvalidJWT(String::from(
+                    "JWT audience field is incorrect",
+                )));
+            }
+        },
+        None => {
+            return Err(EsiError::InvalidJWT(String::from(
+                "JWT audience field is incorrect",
+            )));
+        }
     }
     let token_claims = serde_json::from_value(token.claims)?;
     Ok(token_claims)
