@@ -1,42 +1,12 @@
 use crate::prelude::*;
-#[cfg(feature = "validate_jwt")]
 use alcoholic_jwt::{validate, Validation, JWK};
-#[cfg(feature = "validate_jwt")]
 use log::error;
-#[cfg(feature = "validate_jwt")]
 use reqwest::Client;
-#[cfg(feature = "validate_jwt")]
 use serde_json::Value;
 
-#[cfg(feature = "validate_jwt")]
 const TOKEN_AUTH_INFO_URL: &str =
     "https://login.eveonline.com/.well-known/oauth-authorization-server";
 
-/// Access token (JWT) payload.
-///
-/// For more information on the content of this struct, see
-/// the [ESI documentation].
-///
-/// [ESI documentation]: https://docs.esi.evetech.net/docs/sso/validating_eve_jwt.html
-#[derive(Debug, Deserialize)]
-#[allow(missing_docs)]
-pub struct TokenClaims {
-    pub aud: String,
-    pub azp: String,
-    pub exp: i64,
-    pub iat: i64,
-    pub iss: String,
-    pub jti: String,
-    pub kid: String,
-    pub name: String,
-    pub owner: String,
-    pub region: String,
-    pub sub: String,
-    pub tenant: String,
-    pub tier: String,
-}
-
-#[cfg(feature = "validate_jwt")]
 /// Get the URL that hosts the valid JWT signing keys.
 async fn get_keys_url(client: &Client) -> EsiResult<String> {
     let resp = client.get(TOKEN_AUTH_INFO_URL).send().await?;
@@ -54,7 +24,6 @@ async fn get_keys_url(client: &Client) -> EsiResult<String> {
     Ok(url.to_owned())
 }
 
-#[cfg(feature = "validate_jwt")]
 /// Get the RS256 key to use.
 async fn get_rs256_key(client: &Client) -> EsiResult<String> {
     let keys_url = get_keys_url(client).await?;
@@ -71,7 +40,6 @@ async fn get_rs256_key(client: &Client) -> EsiResult<String> {
     Ok(key)
 }
 
-#[cfg(feature = "validate_jwt")]
 /// Decode and validate the SSO JWT, returning the contents.
 pub(crate) async fn validate_jwt(client: &Client, token: &str) -> EsiResult<TokenClaims> {
     let validation_key_str = get_rs256_key(client).await?;
