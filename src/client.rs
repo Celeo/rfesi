@@ -3,6 +3,7 @@
 use crate::{groups::*, prelude::*};
 use base64::engine::{general_purpose::STANDARD as base64, Engine};
 use log::{debug, error};
+#[cfg(feature = "random_state")]
 use rand::{distributions::Alphanumeric, Rng};
 use reqwest::{
     header::{self, HeaderMap, HeaderValue},
@@ -194,7 +195,7 @@ impl Esi {
             .map(char::from)
             .collect();
         #[cfg(not(feature = "random_state"))]
-        let state = "rfesi_unused";
+        let state = "rfesi_unused".to_string();
         Ok((
             format!(
                 "{}?response_type=code&redirect_uri={}&client_id={}&scope={}&state={}",
@@ -273,11 +274,11 @@ impl Esi {
             return Err(EsiError::InvalidStatusCode(resp.status().as_u16()));
         }
         let data: AuthenticateResponse = resp.json().await?;
+        #[allow(unused_variables)]
+        let claim_data: Option<TokenClaims> = None;
         #[cfg(feature = "validate_jwt")]
         let claim_data =
             Some(crate::jwt_util::validate_jwt(&self.client, &data.access_token).await?);
-        #[cfg(not(feature = "validate_jwt"))]
-        let claim_data = None;
         self.access_token = Some(data.access_token);
         // the response's "expires_in" field is seconds, need millis
         self.access_expiration = Some((data.expires_in as u128 * 1_000) + current_time_millis()?);
