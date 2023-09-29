@@ -14,7 +14,7 @@ pub(crate) use serde::Deserialize;
 #[derive(Debug, Deserialize)]
 #[allow(missing_docs)]
 pub struct TokenClaims {
-    pub aud: String,
+    pub aud: Vec<String>,
     pub azp: String,
     pub exp: i64,
     pub iat: i64,
@@ -24,6 +24,7 @@ pub struct TokenClaims {
     pub name: String,
     pub owner: String,
     pub region: String,
+    pub scp: Vec<String>,
     pub sub: String,
     pub tenant: String,
     pub tier: String,

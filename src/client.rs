@@ -277,8 +277,14 @@ impl Esi {
         #[allow(unused_variables)]
         let claim_data: Option<TokenClaims> = None;
         #[cfg(feature = "validate_jwt")]
-        let claim_data =
-            Some(crate::jwt_util::validate_jwt(&self.client, &data.access_token).await?);
+        let claim_data = Some(
+            crate::jwt_util::validate_jwt(
+                &self.client,
+                &data.access_token,
+                self.client_id.as_ref().unwrap(),
+            )
+            .await?,
+        );
         self.access_token = Some(data.access_token);
         // the response's "expires_in" field is seconds, need millis
         self.access_expiration = Some((data.expires_in as u128 * 1_000) + current_time_millis()?);

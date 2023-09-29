@@ -41,11 +41,18 @@ async fn get_rs256_key(client: &Client) -> EsiResult<String> {
 }
 
 /// Decode and validate the SSO JWT, returning the contents.
-pub(crate) async fn validate_jwt(client: &Client, token: &str) -> EsiResult<TokenClaims> {
+pub(crate) async fn validate_jwt(
+    client: &Client,
+    token: &str,
+    client_id: &str,
+) -> EsiResult<TokenClaims> {
     let validation_key_str = get_rs256_key(client).await?;
     let validation_key: JWK = serde_json::from_str(&validation_key_str)?;
     let validations = vec![Validation::SubjectPresent, Validation::NotExpired];
     let token = validate(token, &validation_key, validations)?;
+
+    dbg!(&token.claims); // FIXME
+
     /* Additional verifications from https://docs.esi.evetech.net/docs/sso/validating_eve_jwt.html */
     if token.claims["iss"].as_str().unwrap() != "login.eveonline.com"
         && token.claims["iss"].as_str().unwrap() != "https://login.eveonline.com"
@@ -54,20 +61,21 @@ pub(crate) async fn validate_jwt(client: &Client, token: &str) -> EsiResult<Toke
             "JWT issuer is incorrect",
         )));
     }
-    match token.claims["aud"].as_str() {
-        Some(aud) => {
-            if aud != "EVE Online" {
-                return Err(EsiError::InvalidJWT(String::from(
-                    "JWT audience field is incorrect",
-                )));
-            }
-        },
-        None => {
-            return Err(EsiError::InvalidJWT(String::from(
-                "JWT audience field is incorrect",
-            )));
-        }
+    dbg!("1");
+    let claims = token.claims["aud"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|v| v.as_str().unwrap())
+        .collect::<Vec<_>>();
+    dbg!("2");
+    if claims.len() != 2 || !claims.contains(&"EVE Online") || !claims.contains(&client_id) {
+        dbg!("3");
+        return Err(EsiError::InvalidJWT(String::from(
+            "JWT audience is incorrect",
+        )));
     }
+    dbg!("4");
     let token_claims = serde_json::from_value(token.claims)?;
     Ok(token_claims)
 }
