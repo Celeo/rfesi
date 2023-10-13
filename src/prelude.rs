@@ -24,7 +24,7 @@ pub struct TokenClaims {
     pub name: String,
     pub owner: String,
     pub region: String,
-    pub scp: serde_json::Value,
+    pub scp: Option<serde_json::Value>,
     pub sub: String,
     pub tenant: String,
     pub tier: String,
