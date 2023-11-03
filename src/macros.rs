@@ -259,7 +259,7 @@ macro_rules! api_post {
                 )*;
             let body = serde_json::to_string($body_param)?;
             self.esi.
-                query("GET", $visibility, &path, None, Some(&body))
+                query("POST", $visibility, &path, None, Some(&body))
                 .await
         }
     }
