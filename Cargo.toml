@@ -14,9 +14,9 @@ keywords = ["eve", "eve-online", "esi"]
 categories = ["api-bindings"]
 
 [dependencies]
-alcoholic_jwt = { version = "4091.0.0", optional = true }
 base64 = "0.21.4"
 http = "0.2.9"
+jsonwebtoken = { version = "9.1.0", optional = true }
 log = "0.4.20"
 rand = { version = "0.8.5", optional = true }
 reqwest = { version = "0.11.20", features = ["json"] }
@@ -28,8 +28,10 @@ thiserror = "1.0.48"
 pretty_env_logger = "0.5.0"
 rusty-hook = "0.11.2"
 tokio = { version = "1.32.0", features = ["full"] }
+chrono = "0.4.31"
+uuid = { version = "1.5.0", features = ["v4", "fast-rng"] }
 
 [features]
 default = ["random_state", "validate_jwt"]
 random_state = ["dep:rand"]
-validate_jwt = ["dep:alcoholic_jwt"]
+validate_jwt = ["dep:jsonwebtoken"]
