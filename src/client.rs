@@ -99,7 +99,7 @@ impl Esi {
             access_expiration: builder.access_expiration,
             refresh_token: builder.refresh_token,
             client,
-            spec: None,
+            spec: builder.spec,
         };
         Ok(e)
     }
@@ -518,6 +518,13 @@ impl Esi {
             }
         }
         Err(EsiError::UnknownOperationID(op_id.to_owned()))
+    }
+
+    /// Retrieve this struct's OpenAPI specification.
+    ///
+    /// Use in tandem with [EsiBuilder::spec].
+    pub fn get_spec(&self) -> Option<&Value> {
+        self.spec.as_ref()
     }
 
     /// Call endpoints under the "alliance" group in ESI.

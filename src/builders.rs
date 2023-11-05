@@ -2,7 +2,8 @@
 
 use crate::prelude::*;
 use reqwest::{header, Client};
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
+use serde_json::Value;
 use std::time::Duration;
 
 /// Builder for the `Esi` struct.
@@ -19,6 +20,31 @@ use std::time::Duration;
 ///     .build()
 ///     .unwrap();
 /// ```
+///
+/// # Overriding the API specification
+///
+/// If you will be creating multiple struct instances,
+/// you will probably run into the issue of needing to
+/// retrieve the API spec on each. Given that this
+/// operation is fairly expensive (certainly as far as
+/// the rest of the API endpoints that EVE makes available),
+/// this builder supports setting that struct:
+///
+/// ```rust
+/// # use rfesi::prelude::EsiBuilder;
+/// # let your_spec = serde_json::json!({});
+/// let mut esi = EsiBuilder::new()
+///     .user_agent("some user agent")
+///     .spec(Some(your_spec))
+///     .build()
+///     .unwrap();
+/// ```
+///
+/// Note that this "spec" function is just another builder
+/// function; you can make use it alongside all of the others.
+/// Note also that this is entirely optional: if you don't
+/// mind retrieving the spec from ESI on each of your
+/// struct instances, you can safely ignore this.
 ///
 /// # Not including client info
 ///
@@ -37,8 +63,8 @@ use std::time::Duration;
 ///     .unwrap();
 /// ```
 ///
-/// Note that you still need to set the user agent -
-/// this is good API usage behavior.
+/// Note that you still need to set the user agent, as this is good
+/// API usage behavior.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, PartialEq, Eq)]
 pub struct EsiBuilder {
     pub(crate) version: Option<String>,
@@ -51,6 +77,7 @@ pub struct EsiBuilder {
     pub(crate) refresh_token: Option<String>,
     pub(crate) user_agent: Option<String>,
     pub(crate) http_timeout: Option<u64>,
+    pub(crate) spec: Option<Value>,
 }
 
 impl EsiBuilder {
@@ -123,6 +150,19 @@ impl EsiBuilder {
         self
     }
 
+    /// Explicitly set the OpenAPI specification.
+    ///
+    /// Allows copying the spec from another `Esi` struct
+    /// or other source, avoiding fetching the spec from
+    /// ESI again. May be useful given the runtime cost
+    /// of retrieving the spec.
+    ///
+    /// Be aware of the potential for out-of-date data.
+    pub fn spec(mut self, spec: Option<Value>) -> Self {
+        self.spec = spec;
+        self
+    }
+
     pub(crate) fn construct_client(&self) -> EsiResult<Client> {
         let http_timeout = self
             .http_timeout
@@ -181,6 +221,7 @@ mod tests {
         assert_eq!(b.callback_url, Some(String::from("c")));
         assert_eq!(b.version, "latest");
         assert_eq!(b.access_token, None);
+        assert_eq!(b.spec, None);
     }
 
     #[test]
@@ -192,6 +233,7 @@ mod tests {
         assert_eq!(b.callback_url, None);
         assert_eq!(b.version, "latest");
         assert_eq!(b.access_token, None);
+        assert_eq!(b.spec, None);
     }
 
     #[test]
@@ -203,8 +245,30 @@ mod tests {
     }
 
     #[test]
+    fn test_builder_with_spec() {
+        let spec = serde_json::json!({
+            "consumes": ["application/json"],
+            "produces": ["application/json"],
+            "host": "esi.evetech.net",
+            "info": {},
+            "definitions": {},
+            "parameters": {},
+            "paths": {},
+            "schemes": ["https"],
+            "swagger": "2.0",
+        });
+        let b = EsiBuilder::new()
+            .user_agent("d")
+            .spec(Some(spec.clone()))
+            .build()
+            .unwrap();
+
+        assert_eq!(spec, b.spec.unwrap());
+    }
+
+    #[test]
     fn test_builder_to_json_empty() {
-        let json = r#"{"version":null,"client_id":null,"client_secret":null,"callback_url":null,"scope":null,"access_token":null,"access_expiration":null,"refresh_token":null,"user_agent":null,"http_timeout":null}"#;
+        let json = r#"{"version":null,"client_id":null,"client_secret":null,"callback_url":null,"scope":null,"access_token":null,"access_expiration":null,"refresh_token":null,"user_agent":null,"http_timeout":null,"spec":null}"#;
         assert_eq!(json, serde_json::to_string(&EsiBuilder::new()).unwrap());
     }
 
@@ -220,7 +284,8 @@ mod tests {
             "access_expiration": 1,
             "refresh_token": "f",
             "user_agent": "g",
-            "http_timeout": 60000
+            "http_timeout": 60000,
+            "spec": null
           }"#;
         let actual: EsiBuilder = serde_json::from_str(json).unwrap();
         let expected = EsiBuilder::new()
@@ -233,7 +298,8 @@ mod tests {
             .access_expiration(Some(1))
             .refresh_token(Some("f"))
             .user_agent("g")
-            .http_timeout(Some(60_000));
+            .http_timeout(Some(60_000))
+            .spec(None);
 
         assert_eq!(actual, expected);
     }
