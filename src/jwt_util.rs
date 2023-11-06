@@ -1,8 +1,10 @@
-use crate::prelude::*;
-use alcoholic_jwt::{validate, Validation, JWK};
+use jsonwebtoken::{Algorithm, decode, DecodingKey, TokenData, Validation};
+use jsonwebtoken::jwk::Jwk;
 use log::error;
 use reqwest::Client;
 use serde_json::Value;
+
+use crate::prelude::*;
 
 const TOKEN_AUTH_INFO_URL: &str =
     "https://login.eveonline.com/.well-known/oauth-authorization-server";
@@ -40,16 +42,13 @@ async fn get_rs256_key(client: &Client) -> EsiResult<String> {
     Ok(key)
 }
 
-/// Decode and validate the SSO JWT, returning the contents.
-pub(crate) async fn validate_jwt(
-    client: &Client,
-    token: &str,
-    client_id: &str,
-) -> EsiResult<TokenClaims> {
-    let validation_key_str = get_rs256_key(client).await?;
-    let validation_key: JWK = serde_json::from_str(&validation_key_str)?;
-    let validations = vec![Validation::SubjectPresent, Validation::NotExpired];
-    let token = validate(token, &validation_key, validations)?;
+/// Decode and validate the JWT token
+fn validate(token: &str, client_id: &str, decoding_key: &DecodingKey) -> Result<TokenClaims, EsiError> {
+    let mut validations = Validation::new(Algorithm::RS256);
+    validations.required_spec_claims = vec![String::from("sub")].into_iter().collect();
+    validations.set_audience(&[client_id, "EVE Online"]);
+
+    let token: TokenData<Value> = decode(token, decoding_key, &validations)?;
     /* Additional verifications from https://docs.esi.evetech.net/docs/sso/validating_eve_jwt.html */
     if token.claims["iss"].as_str().unwrap() != "login.eveonline.com"
         && token.claims["iss"].as_str().unwrap() != "https://login.eveonline.com"
@@ -58,17 +57,131 @@ pub(crate) async fn validate_jwt(
             "JWT issuer is incorrect",
         )));
     }
-    let claims = token.claims["aud"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .map(|v| v.as_str().unwrap())
-        .collect::<Vec<_>>();
-    if claims.len() != 2 || !claims.contains(&"EVE Online") || !claims.contains(&client_id) {
-        return Err(EsiError::InvalidJWT(String::from(
-            "JWT audience is incorrect",
-        )));
-    }
+
     let token_claims = serde_json::from_value(token.claims)?;
     Ok(token_claims)
+}
+
+/// Decode and validate the SSO JWT, returning the contents.
+pub(crate) async fn validate_jwt(
+    client: &Client,
+    token: &str,
+    client_id: &str,
+) -> EsiResult<TokenClaims> {
+    let validation_key_str = get_rs256_key(client).await?;
+    let validation_key: Jwk = serde_json::from_str(&validation_key_str)?;
+    let decoding_key = DecodingKey::from_jwk(&validation_key)?;
+
+    validate(token, client_id, &decoding_key)
+}
+
+#[cfg(test)]
+mod tests {
+    use std::{env, fs};
+    use std::path::PathBuf;
+
+    use jsonwebtoken::{Algorithm, DecodingKey, EncodingKey, Header};
+    use serde_json::Value;
+
+    use crate::jwt_util::validate;
+    use crate::prelude::TokenClaims;
+
+    #[test]
+    fn test_jwt_validity() {
+        let header = Header::new(Algorithm::RS256);
+        let (claim, client_id) = generate_valid_claims();
+        let (private_key, public_key) = load_key();
+
+        let encoding_key = EncodingKey::from_rsa_pem(private_key.as_bytes()).unwrap();
+        let token = jsonwebtoken::encode(&header, &claim, &encoding_key).unwrap();
+
+        let decoding_key = DecodingKey::from_rsa_pem(public_key.as_bytes()).unwrap();
+
+        let decoded_claim = validate(&token, &client_id, &decoding_key).unwrap();
+
+        assert_eq!(decoded_claim, claim);
+    }
+
+    #[test]
+    fn test_jwt_validity_wrong_exp() {
+        let header = Header::new(Algorithm::RS256);
+        let (mut claim, client_id) = generate_valid_claims();
+        claim.exp = (chrono::Utc::now() - chrono::Duration::minutes(5)).timestamp();
+        let (private_key, public_key) = load_key();
+
+        let encoding_key = EncodingKey::from_rsa_pem(private_key.as_bytes()).unwrap();
+        let token = jsonwebtoken::encode(&header, &claim, &encoding_key).unwrap();
+
+        let decoding_key = DecodingKey::from_rsa_pem(public_key.as_bytes()).unwrap();
+
+        assert!(validate(&token, &client_id, &decoding_key).is_err())
+    }
+
+    #[test]
+    fn test_jwt_validity_no_aud() {
+        let header = Header::new(Algorithm::RS256);
+        let (mut claim, client_id) = generate_valid_claims();
+        claim.aud = vec![];
+        let (private_key, public_key) = load_key();
+
+        let encoding_key = EncodingKey::from_rsa_pem(private_key.as_bytes()).unwrap();
+        let token = jsonwebtoken::encode(&header, &claim, &encoding_key).unwrap();
+
+        let decoding_key = DecodingKey::from_rsa_pem(public_key.as_bytes()).unwrap();
+
+        assert!(validate(&token, &client_id, &decoding_key).is_err())
+    }
+
+    #[test]
+    fn test_jwt_validity_wrong_iss() {
+        let header = Header::new(Algorithm::RS256);
+        let (mut claim, client_id) = generate_valid_claims();
+        claim.iss = "".to_string();
+        let (private_key, public_key) = load_key();
+
+        let encoding_key = EncodingKey::from_rsa_pem(private_key.as_bytes()).unwrap();
+        let token = jsonwebtoken::encode(&header, &claim, &encoding_key).unwrap();
+
+        let decoding_key = DecodingKey::from_rsa_pem(public_key.as_bytes()).unwrap();
+
+        assert!(validate(&token, &client_id, &decoding_key).is_err())
+    }
+
+    fn generate_valid_claims() -> (TokenClaims, String) {
+        let client_id = String::from("client_id");
+        let issued = chrono::Utc::now();
+        let expiry = issued + chrono::Duration::minutes(5);
+        let claim = TokenClaims {
+            aud: vec![client_id.clone(), "EVE Online".to_string()],
+            azp: client_id.clone(),
+            exp: expiry.timestamp(),
+            iat: issued.timestamp(),
+            iss: "https://login.eveonline.com".to_string(),
+            jti: uuid::Uuid::new_v4().to_string(),
+            kid: "JWT-Signature-Key".to_string(),
+            name: "Xxxxxx Yyyyyyy".to_string(),
+            owner: "8PmzCeTKb4VFUDrHLc/AeZXDSWM=".to_string(),
+            region: "world".to_string(),
+            scp: Some(Value::Array(vec![Value::String("esi-skills.read_skills.v1".to_string())])),
+            sub: "CHARACTER:EVE:123123".to_string(),
+            tenant: "tranquility".to_string(),
+            tier: "live".to_string(),
+        };
+        (claim, client_id)
+    }
+
+    fn load_key() -> (String, String) {
+        let mut root_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        root_dir.push("resources/test/keys");
+
+        let mut private_key = root_dir.clone();
+        private_key.push("jwtRS256.key");
+        let private_key = fs::read_to_string(private_key).unwrap();
+
+        let mut public_key = root_dir.clone();
+        public_key.push("jwtRS256.key.pub");
+        let public_key = fs::read_to_string(public_key).unwrap();
+
+        (private_key, public_key)
+    }
 }

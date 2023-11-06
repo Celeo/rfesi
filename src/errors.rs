@@ -20,7 +20,7 @@ pub enum EsiError {
     /// Validation of the JWT failed.
     #[cfg(feature = "validate_jwt")]
     #[error("JWT validation failed")]
-    JwtValidationFailed(#[from] alcoholic_jwt::ValidationError),
+    JwtValidationFailed(#[from] jsonwebtoken::errors::Error),
     /// Error that can be thrown by any function that makes HTTP
     /// calls our to external resources for response codes that
     /// aren't valid as defined [by reqwest].
