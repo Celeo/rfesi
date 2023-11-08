@@ -189,13 +189,13 @@ impl Esi {
     pub fn get_authorize_url(&self) -> EsiResult<(String, String)> {
         self.check_client_info()?;
         #[cfg(feature = "random_state")]
-            let state = rand::thread_rng()
+        let state = rand::thread_rng()
             .sample_iter(&Alphanumeric)
             .take(10)
             .map(char::from)
             .collect();
         #[cfg(not(feature = "random_state"))]
-            let state = "rfesi_unused".to_string();
+        let state = "rfesi_unused".to_string();
         Ok((
             format!(
                 "{}?response_type=code&redirect_uri={}&client_id={}&scope={}&state={}",
@@ -275,15 +275,15 @@ impl Esi {
         }
         let data: AuthenticateResponse = resp.json().await?;
         #[allow(unused_variables)]
-            let claim_data: Option<TokenClaims> = None;
+        let claim_data: Option<TokenClaims> = None;
         #[cfg(feature = "validate_jwt")]
-            let claim_data = Some(
+        let claim_data = Some(
             crate::jwt_util::validate_jwt(
                 &self.client,
                 &data.access_token,
                 Some(self.client_id.as_ref().unwrap()),
             )
-                .await?,
+            .await?,
         );
         self.access_token = Some(data.access_token);
         // the response's "expires_in" field is seconds, need millis
