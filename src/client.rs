@@ -315,7 +315,50 @@ impl Esi {
     /// # }
     /// ```
     pub async fn use_refresh_token(&mut self, refresh_token: &str) -> EsiResult<()> {
-        // note: don't log the token
+        self.refresh_access_token(Some(refresh_token)).await?;
+        Ok(())
+    }
+
+    /// Authenticate via a refresh token given as input, or using the internal refresh_token if it's available.
+    ///
+    /// The functionality of a refresh token allows re-authenticating this struct
+    /// instance without prompting the user to log into EVE SSO again. When the user
+    /// is authenticated in that manner, a refresh token is returned and available
+    /// via the `refresh_token` struct field. Store this securely should you wish
+    /// to later make authenticate calls for that user.
+    ///
+    /// # Example with internal token
+    /// ```rust,no_run
+    /// # async fn run() {
+    /// # use rfesi::prelude::*;
+    /// # let mut esi = EsiBuilder::new()
+    /// #     .user_agent("some user agent")
+    /// #     .refresh_token(Some("MyRefreshToken"))
+    /// #     .build()
+    /// #     .unwrap();
+    /// esi.refresh_access_token(None).await.unwrap();
+    /// # }
+    /// ```
+    /// # Example with input token
+    /// ```rust,no_run
+    /// # async fn run() {
+    /// # use rfesi::prelude::*;
+    /// # let mut esi = EsiBuilder::new()
+    /// #     .user_agent("some user agent")
+    /// #     .build()
+    /// #     .unwrap();
+    /// esi.refresh_access_token(Some("MyRefreshToken")).await.unwrap();
+    /// # }
+    /// ```
+    pub async fn refresh_access_token(&mut self, refresh_token: Option<&str>) -> EsiResult<()> {
+        let token = if let Some(token) = refresh_token {
+            token.to_string()
+        } else if let Some(token) = self.refresh_token.clone() {
+            token
+        } else {
+            return Err(EsiError::NoRefreshTokenAvailable);
+        };
+
         debug!("Authenticating with refresh token");
         let resp = self
             .client
@@ -323,7 +366,7 @@ impl Esi {
             .headers(self.get_auth_headers()?)
             .form(&HashMap::from([
                 ("grant_type", "refresh_token"),
-                ("refresh_token", refresh_token),
+                ("refresh_token", &token),
             ]))
             .send()
             .await?;
