@@ -281,7 +281,7 @@ impl Esi {
             crate::jwt_util::validate_jwt(
                 &self.client,
                 &data.access_token,
-                Some(self.client_id.as_ref().unwrap()),
+                self.client_id.as_ref().unwrap(),
             )
             .await?,
         );

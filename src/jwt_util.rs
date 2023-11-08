@@ -43,14 +43,10 @@ async fn get_rs256_key(client: &Client) -> EsiResult<String> {
 }
 
 /// Decode and validate the JWT token
-fn validate(token: &str, client_id: Option<&str>, decoding_key: &DecodingKey) -> Result<TokenClaims, EsiError> {
+fn validate(token: &str, client_id: &str, decoding_key: &DecodingKey) -> Result<TokenClaims, EsiError> {
     let mut validations = Validation::new(Algorithm::RS256);
     validations.required_spec_claims = vec![String::from("sub")].into_iter().collect();
-    let mut aud = vec!["EVE Online"];
-    if let Some(id) = client_id {
-        aud.push(id)
-    }
-    validations.set_audience(&aud);
+    validations.set_audience(&[client_id, "EVE Online"]);
 
     let token: TokenData<Value> = decode(token, decoding_key, &validations)?;
     /* Additional verifications from https://docs.esi.evetech.net/docs/sso/validating_eve_jwt.html */
@@ -70,7 +66,7 @@ fn validate(token: &str, client_id: Option<&str>, decoding_key: &DecodingKey) ->
 pub(crate) async fn validate_jwt(
     client: &Client,
     token: &str,
-    client_id: Option<&str>,
+    client_id: &str,
 ) -> EsiResult<TokenClaims> {
     let validation_key_str = get_rs256_key(client).await?;
     let validation_key: Jwk = serde_json::from_str(&validation_key_str)?;
@@ -101,7 +97,7 @@ mod tests {
 
         let decoding_key = DecodingKey::from_rsa_pem(public_key.as_bytes()).unwrap();
 
-        let decoded_claim = validate(&token, Some(&client_id), &decoding_key).unwrap();
+        let decoded_claim = validate(&token, &client_id, &decoding_key).unwrap();
 
         assert_eq!(decoded_claim, claim);
     }
@@ -118,7 +114,7 @@ mod tests {
 
         let decoding_key = DecodingKey::from_rsa_pem(public_key.as_bytes()).unwrap();
 
-        assert!(validate(&token, Some(&client_id), &decoding_key).is_err())
+        assert!(validate(&token, &client_id, &decoding_key).is_err())
     }
 
     #[test]
@@ -133,7 +129,7 @@ mod tests {
 
         let decoding_key = DecodingKey::from_rsa_pem(public_key.as_bytes()).unwrap();
 
-        assert!(validate(&token, Some(&client_id), &decoding_key).is_err())
+        assert!(validate(&token, &client_id, &decoding_key).is_err())
     }
 
     #[test]
@@ -148,7 +144,7 @@ mod tests {
 
         let decoding_key = DecodingKey::from_rsa_pem(public_key.as_bytes()).unwrap();
 
-        assert!(validate(&token, Some(&client_id), &decoding_key).is_err())
+        assert!(validate(&token, &client_id, &decoding_key).is_err())
     }
 
     fn generate_valid_claims() -> (TokenClaims, String) {
