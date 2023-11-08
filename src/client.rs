@@ -189,13 +189,13 @@ impl Esi {
     pub fn get_authorize_url(&self) -> EsiResult<(String, String)> {
         self.check_client_info()?;
         #[cfg(feature = "random_state")]
-        let state = rand::thread_rng()
+            let state = rand::thread_rng()
             .sample_iter(&Alphanumeric)
             .take(10)
             .map(char::from)
             .collect();
         #[cfg(not(feature = "random_state"))]
-        let state = "rfesi_unused".to_string();
+            let state = "rfesi_unused".to_string();
         Ok((
             format!(
                 "{}?response_type=code&redirect_uri={}&client_id={}&scope={}&state={}",
@@ -275,15 +275,15 @@ impl Esi {
         }
         let data: AuthenticateResponse = resp.json().await?;
         #[allow(unused_variables)]
-        let claim_data: Option<TokenClaims> = None;
+            let claim_data: Option<TokenClaims> = None;
         #[cfg(feature = "validate_jwt")]
-        let claim_data = Some(
+            let claim_data = Some(
             crate::jwt_util::validate_jwt(
                 &self.client,
                 &data.access_token,
-                self.client_id.as_ref().unwrap(),
+                Some(self.client_id.as_ref().unwrap()),
             )
-            .await?,
+                .await?,
         );
         self.access_token = Some(data.access_token);
         // the response's "expires_in" field is seconds, need millis
@@ -315,7 +315,50 @@ impl Esi {
     /// # }
     /// ```
     pub async fn use_refresh_token(&mut self, refresh_token: &str) -> EsiResult<()> {
-        // note: don't log the token
+        self.refresh_access_token(Some(refresh_token)).await?;
+        Ok(())
+    }
+
+    /// Authenticate via a refresh token given as input, or using the internal refresh_token if it's available.
+    ///
+    /// The functionality of a refresh token allows re-authenticating this struct
+    /// instance without prompting the user to log into EVE SSO again. When the user
+    /// is authenticated in that manner, a refresh token is returned and available
+    /// via the `refresh_token` struct field. Store this securely should you wish
+    /// to later make authenticate calls for that user.
+    ///
+    /// # Example with internal token
+    /// ```rust,no_run
+    /// # async fn run() {
+    /// # use rfesi::prelude::*;
+    /// # let mut esi = EsiBuilder::new()
+    /// #     .user_agent("some user agent")
+    /// #     .refresh_token(Some("MyRefreshToken"))
+    /// #     .build()
+    /// #     .unwrap();
+    /// esi.refresh_access_token(None).await.unwrap();
+    /// # }
+    /// ```
+    /// # Example with input token
+    /// ```rust,no_run
+    /// # async fn run() {
+    /// # use rfesi::prelude::*;
+    /// # let mut esi = EsiBuilder::new()
+    /// #     .user_agent("some user agent")
+    /// #     .build()
+    /// #     .unwrap();
+    /// esi.refresh_access_token(Some("MyRefreshToken")).await.unwrap();
+    /// # }
+    /// ```
+    pub async fn refresh_access_token(&mut self, refresh_token: Option<&str>) -> EsiResult<()> {
+        let token = if let Some(token) = refresh_token {
+            token.to_string()
+        } else if let Some(token) = self.refresh_token.clone() {
+            token
+        } else {
+            return Err(EsiError::NoRefreshTokenAvailable);
+        };
+
         debug!("Authenticating with refresh token");
         let resp = self
             .client
@@ -323,7 +366,7 @@ impl Esi {
             .headers(self.get_auth_headers()?)
             .form(&HashMap::from([
                 ("grant_type", "refresh_token"),
-                ("refresh_token", refresh_token),
+                ("refresh_token", &token),
             ]))
             .send()
             .await?;

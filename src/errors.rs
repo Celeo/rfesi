@@ -57,6 +57,10 @@ pub enum EsiError {
     /// to fetch another access token.
     #[error("Access token is expired, and no refresh token is present")]
     AccessTokenExpired,
+    /// Error when a access_token needs to be refreshed, but no refresh
+    /// token could be found to refresh the access token
+    #[error("No refresh token available to request an access token")]
+    NoRefreshTokenAvailable,
 }
 
 /// Crate `Result` wrapper.
