@@ -92,6 +92,23 @@ pub struct Type {
     pub volume: Option<f64>,
 }
 
+#[derive(Debug, Deserialize)]
+#[allow(missing_docs)]
+pub struct Station {
+    pub max_dockable_ship_volume: f64,
+    pub name: String,
+    pub office_rental_cost: f64,
+    pub owner: Option<i32>,
+    pub position: Position,
+    pub race_id: Option<i32>,
+    pub reprocessing_efficiency: f64,
+    pub reprocessing_stations_take: f64,
+    pub services: String,
+    pub station_id: i32,
+    pub system_id: i32,
+    pub type_id: i32,
+}
+
 impl<'a> UniverseGroup<'a> {
     api_get!(
         /// Get a list of constellation ids
@@ -159,5 +176,14 @@ impl<'a> UniverseGroup<'a> {
         RequestType::Public,
         Type,
         (type_id: i32) => "{type_id}"
+    );
+
+    api_get!(
+        /// Information about a station
+        get_station,
+        "get_universe_stations_station_id_ok",
+        RequestType::Public,
+        Station,
+        (station_id: u64) => "{station_id}"
     );
 }
