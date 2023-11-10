@@ -323,7 +323,7 @@ impl Esi {
             crate::jwt_util::validate_jwt(
                 &self.client,
                 &data.access_token,
-                Some(self.client_id.as_ref().unwrap()),
+                self.client_id.as_ref().unwrap(),
             )
                 .await?,
         );
@@ -788,7 +788,7 @@ pub struct AuthenticationInformations {
     /// URL to call/pass to users to initiate an authentication and get an auth code from ESI.
     pub authorization_url: String,
     /// If the default feature "random_state" is enabled, the returned state field string will be
-    /// random; otherwise it'll be "rfesi_unused". The ESI docs link to [this auth0 page] to
+    /// random; otherwise it'll be "rfesi_unused". The ESI docs link to [this auth0 page](https://auth0.com/docs/secure/attack-protection/state-parameters) to
     /// explain.
     /// You need to check the state yourself when the response from ESI is received.
     pub state: String,
