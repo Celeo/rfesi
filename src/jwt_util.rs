@@ -46,7 +46,8 @@ async fn get_rs256_key(client: &Client) -> EsiResult<String> {
 fn validate(token: &str, client_id: &str, decoding_key: &DecodingKey) -> Result<TokenClaims, EsiError> {
     let mut validations = Validation::new(Algorithm::RS256);
     validations.required_spec_claims = vec![String::from("sub")].into_iter().collect();
-    validations.set_audience(&[client_id, "EVE Online"]);
+    let aud = vec![client_id, "EVE Online"];
+    validations.set_audience(&aud);
 
     let token: TokenData<Value> = decode(token, decoding_key, &validations)?;
     /* Additional verifications from https://docs.esi.evetech.net/docs/sso/validating_eve_jwt.html */
