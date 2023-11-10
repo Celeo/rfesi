@@ -24,7 +24,7 @@
 //!         .build()
 //! }
 //!
-//! fn get_authorize_url(esi: &Esi) -> AuthenticationInformations {
+//! fn get_authorize_url(esi: &Esi) -> AuthenticationInformation {
 //!     // Direct your user to the tuple's first item, a URL, and have a web service listening
 //!     // at the callback URL that you specified in the EVE application. The second item is
 //!     // the random state variable, which is up to you to check.
@@ -64,7 +64,7 @@
 //!         .build()
 //! }
 //!
-//! fn get_authorize_url(esi: &Esi) -> AuthenticationInformations {
+//! fn get_authorize_url(esi: &Esi) -> AuthenticationInformation {
 //!     // Direct your user to the tuple's first item, a URL, and have a web service listening
 //!     // at the callback URL that you specified in the EVE application. The second item is
 //!     // the random state variable, which is up to you to check.
@@ -75,7 +75,7 @@
 //!     // The `code` value here comes from the URL parameters your service
 //!     // is sent following a user's successful SSO.
 //!     // The 'pkce_verifier' is randomly generated and returned by the previously called
-//!     // 'get_authorize_url()' method, in the AuthenticationInformations struct.
+//!     // 'get_authorize_url()' method, in the AuthenticationInformation struct.
 //!     //
 //!     // Note that most functions in this crate are async, so you'll need
 //!     // to handle those appropriately.

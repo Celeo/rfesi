@@ -1,7 +1,7 @@
+use crate::errors::EsiResult;
 use base64::engine::{general_purpose::URL_SAFE_NO_PAD as base64, Engine};
 use rand::random;
-use sha2::{Sha256, Digest};
-use crate::errors::EsiResult;
+use sha2::{Digest, Sha256};
 
 /// PKCEVerifier is a base64urlencoded String to send in the body of the token request alongside the
 /// code returned from the ESI and the Client ID
@@ -25,7 +25,10 @@ pub fn generate() -> EsiResult<Pkce> {
 
     // Encode challenge as base64 URL-safe string
     let challenge_base64 = base64url(&challenge.to_vec());
-    Ok(Pkce { challenge: challenge_base64, verifier: verifier_base64 })
+    Ok(Pkce {
+        challenge: challenge_base64,
+        verifier: verifier_base64,
+    })
 }
 
 pub fn base64url(verifier: &Vec<u8>) -> String {

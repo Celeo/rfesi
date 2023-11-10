@@ -1,5 +1,5 @@
-use jsonwebtoken::{Algorithm, decode, DecodingKey, TokenData, Validation};
 use jsonwebtoken::jwk::Jwk;
+use jsonwebtoken::{decode, Algorithm, DecodingKey, TokenData, Validation};
 use log::error;
 use reqwest::Client;
 use serde_json::Value;
@@ -43,7 +43,11 @@ async fn get_rs256_key(client: &Client) -> EsiResult<String> {
 }
 
 /// Decode and validate the JWT token
-fn validate(token: &str, client_id: &str, decoding_key: &DecodingKey) -> Result<TokenClaims, EsiError> {
+fn validate(
+    token: &str,
+    client_id: &str,
+    decoding_key: &DecodingKey,
+) -> Result<TokenClaims, EsiError> {
     let mut validations = Validation::new(Algorithm::RS256);
     validations.required_spec_claims = vec![String::from("sub")].into_iter().collect();
     let aud = vec![client_id, "EVE Online"];
@@ -78,8 +82,8 @@ pub(crate) async fn validate_jwt(
 
 #[cfg(test)]
 mod tests {
-    use std::{env, fs};
     use std::path::PathBuf;
+    use std::{env, fs};
 
     use jsonwebtoken::{Algorithm, DecodingKey, EncodingKey, Header};
     use serde_json::Value;
@@ -163,7 +167,9 @@ mod tests {
             name: "Xxxxxx Yyyyyyy".to_string(),
             owner: "8PmzCeTKb4VFUDrHLc/AeZXDSWM=".to_string(),
             region: "world".to_string(),
-            scp: Some(Value::Array(vec![Value::String("esi-skills.read_skills.v1".to_string())])),
+            scp: Some(Value::Array(vec![Value::String(
+                "esi-skills.read_skills.v1".to_string(),
+            )])),
             sub: "CHARACTER:EVE:123123".to_string(),
             tenant: "tranquility".to_string(),
             tier: "live".to_string(),

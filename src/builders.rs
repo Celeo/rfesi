@@ -2,7 +2,6 @@
 
 use crate::prelude::*;
 use reqwest::{header, Client};
-use serde::Serialize;
 use serde_json::Value;
 use std::time::Duration;
 

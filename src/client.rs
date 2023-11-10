@@ -6,19 +6,19 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 
-use base64::engine::{Engine, general_purpose::STANDARD as base64};
+use base64::engine::{general_purpose::STANDARD as base64, Engine};
 use log::{debug, error};
 #[cfg(feature = "random_state")]
 use rand::{distributions::Alphanumeric, Rng};
 use reqwest::{
-    Client,
-    header::{self, HeaderMap, HeaderValue}, Method,
+    header::{self, HeaderMap, HeaderValue},
+    Client, Method,
 };
-use serde::{de::DeserializeOwned, Deserialize};
+use serde::de::DeserializeOwned;
 use serde_json::Value;
 
-use crate::{groups::*, pkce, prelude::*};
 use crate::pkce::PkceVerifier;
+use crate::{groups::*, pkce, prelude::*};
 
 const BASE_URL: &str = "https://esi.evetech.net/";
 const AUTHORIZE_URL: &str = "https://login.eveonline.com/v2/oauth/authorize";
@@ -51,6 +51,20 @@ pub enum RequestType {
     Public,
     /// Endpoints that require acting on behalf of an authenticated character
     Authenticated,
+}
+
+/// AuthenticationInformation contains data needed to complete the requested authentication flow.
+pub struct AuthenticationInformation {
+    /// URL to call/pass to users to initiate an authentication and get an auth code from ESI.
+    pub authorization_url: String,
+    /// If the default feature "random_state" is enabled, the returned state field string will be
+    /// random; otherwise it'll be "rfesi_unused". The ESI docs link to
+    /// [this auth0 page](https://auth0.com/docs/secure/attack-protection/state-parameters)
+    /// to explain. You need to check the state yourself when the response from ESI is received.
+    pub state: String,
+    /// Filled if you've selected PKCE authentication for application.
+    /// You will need it to authenticate using the code received from ESI.
+    pub pkce_verifier: Option<PkceVerifier>,
 }
 
 /// Struct to interact with ESI.
@@ -99,8 +113,7 @@ impl Esi {
             client_secret: builder.client_secret,
             callback_url: builder.callback_url,
             scope: builder.scope.unwrap_or_else(|| "".to_owned()),
-            application_auth: builder.application_auth
-                .unwrap_or(false),
+            application_auth: builder.application_auth.unwrap_or(false),
             access_token: builder.access_token,
             access_expiration: builder.access_expiration,
             refresh_token: builder.refresh_token,
@@ -189,9 +202,9 @@ impl Esi {
     /// #     .callback_url("your_callback_url")
     /// #     .build()
     /// #     .unwrap();
-    /// let auth_infos = esi.get_authorize_url().unwrap();
+    /// let auth_info = esi.get_authorize_url().unwrap();
     /// // then send your user to that URL
-    /// let url = auth_infos.authorization_url;
+    /// let url = auth_info.authorization_url;
     /// ```
     ///
     /// If you opted to not include client information in
@@ -199,16 +212,16 @@ impl Esi {
     /// an error instead.
     ///
     /// [this auth0 page]: https://auth0.com/docs/secure/attack-protection/state-parameters
-    pub fn get_authorize_url(&self) -> EsiResult<AuthenticationInformations> {
+    pub fn get_authorize_url(&self) -> EsiResult<AuthenticationInformation> {
         self.check_client_info()?;
         #[cfg(feature = "random_state")]
-            let state = rand::thread_rng()
+        let state = rand::thread_rng()
             .sample_iter(&Alphanumeric)
             .take(10)
             .map(char::from)
             .collect();
         #[cfg(not(feature = "random_state"))]
-            let state = "rfesi_unused".to_string();
+        let state = "rfesi_unused".to_string();
         let mut url = format!(
             "{}?response_type=code&redirect_uri={}&client_id={}&scope={}&state={}",
             AUTHORIZE_URL,
@@ -218,13 +231,20 @@ impl Esi {
             &state
         );
         let mut pkce_verifier = None;
-        if self.client_secret.is_none() // PKCE can be theoretically combined with Client Secret, but not sure if ESI support it.
-            && self.application_auth {
+        // PKCE can be theoretically combined with client secret, but not sure if ESI supports it
+        if self.client_secret.is_none() && self.application_auth {
             let pkce = pkce::generate()?;
             pkce_verifier = Some(pkce.verifier);
-            url = format!("{}&code_challenge={}&code_challenge_method=S256", url, pkce.challenge)
+            url = format!(
+                "{}&code_challenge={}&code_challenge_method=S256",
+                url, pkce.challenge
+            )
         }
-        Ok(AuthenticationInformations { authorization_url: url, state, pkce_verifier })
+        Ok(AuthenticationInformation {
+            authorization_url: url,
+            state,
+            pkce_verifier,
+        })
     }
 
     fn get_auth_headers(&self) -> EsiResult<HeaderMap> {
@@ -260,7 +280,7 @@ impl Esi {
     /// token's claims will be returned. If the feature is not enabled, then
     /// the returned value will be `None`.
     ///
-    /// # Example (Client Secret)
+    /// # Example (client secret)
     /// ```rust,no_run
     /// # async fn run() {
     /// # use rfesi::prelude::*;
@@ -274,6 +294,7 @@ impl Esi {
     /// let claims = esi.authenticate("abcdef...", None).await.unwrap();
     /// # }
     /// ```
+    ///
     /// # Example (PKCE/Application authentication)
     /// ```rust,no_run
     /// # use rfesi::prelude::*;
@@ -289,12 +310,13 @@ impl Esi {
     /// # let claims = esi.authenticate("abcdef...", auth_infos.pkce_verifier).await.unwrap();
     /// # }
     /// ```
-    pub async fn authenticate(&mut self, code: &str, pkce_verifier: Option<PkceVerifier>) -> EsiResult<Option<TokenClaims>> {
+    pub async fn authenticate(
+        &mut self,
+        code: &str,
+        pkce_verifier: Option<PkceVerifier>,
+    ) -> EsiResult<Option<TokenClaims>> {
         debug!("Authenticating with code {}", code);
-        let mut body = HashMap::from([
-            ("grant_type", "authorization_code"),
-            ("code", code),
-        ]);
+        let mut body = HashMap::from([("grant_type", "authorization_code"), ("code", code)]);
         if self.application_auth {
             let option = self.client_id.as_ref();
             body.insert("client_id", option.unwrap());
@@ -317,18 +339,18 @@ impl Esi {
         }
         let data: AuthenticateResponse = resp.json().await?;
         #[allow(unused_variables)]
-            let claim_data: Option<TokenClaims> = None;
+        let claim_data: Option<TokenClaims> = None;
         #[cfg(feature = "validate_jwt")]
-            let claim_data = Some(
+        let claim_data = Some(
             crate::jwt_util::validate_jwt(
                 &self.client,
                 &data.access_token,
                 self.client_id.as_ref().unwrap(),
             )
-                .await?,
+            .await?,
         );
         self.access_token = Some(data.access_token);
-        // the response's "expires_in" field is seconds, need millis
+        // the response's "expires_in" field is seconds but need millis
         self.access_expiration = Some((data.expires_in as u128 * 1_000) + current_time_millis()?);
         self.refresh_token = data.refresh_token;
         Ok(claim_data)
@@ -402,10 +424,7 @@ impl Esi {
         };
 
         debug!("Authenticating with refresh token");
-        let mut body = HashMap::from([
-            ("grant_type", "refresh_token"),
-            ("refresh_token", &token),
-        ]);
+        let mut body = HashMap::from([("grant_type", "refresh_token"), ("refresh_token", &token)]);
         if self.application_auth {
             let option = self.client_id.as_ref();
             body.insert("client_id", option.unwrap());
@@ -781,20 +800,6 @@ impl Esi {
 /// Get the current system timestamp since the epoch.
 fn current_time_millis() -> Result<u128, EsiError> {
     Ok(SystemTime::now().duration_since(UNIX_EPOCH)?.as_millis())
-}
-
-/// AuthenticationInformations contains informations needed to complete the requested authentication flow.
-pub struct AuthenticationInformations {
-    /// URL to call/pass to users to initiate an authentication and get an auth code from ESI.
-    pub authorization_url: String,
-    /// If the default feature "random_state" is enabled, the returned state field string will be
-    /// random; otherwise it'll be "rfesi_unused". The ESI docs link to [this auth0 page](https://auth0.com/docs/secure/attack-protection/state-parameters) to
-    /// explain.
-    /// You need to check the state yourself when the response from ESI is received.
-    pub state: String,
-    /// Filled if you've selected PKCE authentication for application.
-    /// You will need it to authenticate using the code received from ESI.
-    pub pkce_verifier: Option<PkceVerifier>,
 }
 
 #[cfg(test)]

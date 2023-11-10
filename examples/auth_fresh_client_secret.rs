@@ -13,7 +13,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .callback_url("http://localhost:5000/esi/callback")
         .scope("g h i")
         .build()?;
-    info!("Send your users to {}", esi.get_authorize_url()?.authorization_url);
+    info!(
+        "Send your users to {}",
+        esi.get_authorize_url()?.authorization_url
+    );
 
     Ok(())
 }
