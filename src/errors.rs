@@ -9,6 +9,11 @@ pub enum EsiError {
     /// invalid when `.build()` is called.
     #[error("Missing required builder struct value '{0}'")]
     EmptyClientValue(String),
+    /// Error that can be thrown if the `EsiBuilder` struct is
+    /// invalid when `.build()` is called.
+    /// You need to specify either a client secret or enable application auth
+    #[error("Authentication flow information missing. You need to either specify client_secret or enable application auth.")]
+    MissingAuthenticationFlowInformation,
     /// You have to retrieve the ESI spec via `Esi::update_spec`
     /// before making this call.
     #[error("Missing spec")]

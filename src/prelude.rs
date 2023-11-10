@@ -1,7 +1,8 @@
 //! Module for easy imports.
 
 pub use crate::builders::EsiBuilder;
-pub use crate::client::{Esi, RequestType};
+pub use crate::client::{Esi, RequestType, AuthenticationInformations};
+pub use crate::pkce::{PkceVerifier};
 pub use crate::errors::{EsiError, EsiResult};
 pub(crate) use serde::Deserialize;
 use serde::Serialize;
