@@ -10,86 +10,86 @@ pub struct UniverseGroup<'a> {
 #[derive(Debug, Deserialize)]
 #[allow(missing_docs)]
 pub struct Position {
-    x: f64,
-    y: f64,
-    z: f64,
+    pub x: f64,
+    pub y: f64,
+    pub z: f64,
 }
 
 #[derive(Debug, Deserialize)]
 #[allow(missing_docs)]
 pub struct Constellation {
-    constellation_id: i32,
-    name: String,
-    position: Position,
-    region_id: i32,
-    systems: Vec<i32>,
+    pub constellation_id: i32,
+    pub name: String,
+    pub position: Position,
+    pub region_id: i32,
+    pub systems: Vec<i32>,
 }
 
 #[derive(Debug, Deserialize)]
 #[allow(missing_docs)]
 pub struct Region {
-    constellations: Vec<i32>,
-    description: Option<String>,
-    name: String,
-    region_id: i32,
+    pub constellations: Vec<i32>,
+    pub description: Option<String>,
+    pub name: String,
+    pub region_id: i32,
 }
 
 #[derive(Debug, Deserialize)]
 #[allow(missing_docs)]
 pub struct SystemPlanet {
-    asteroid_belts: Option<Vec<i32>>,
-    moons: Option<Vec<i32>>,
-    planet_id: i32,
+    pub asteroid_belts: Option<Vec<i32>>,
+    pub moons: Option<Vec<i32>>,
+    pub planet_id: i32,
 }
 
 #[derive(Debug, Deserialize)]
 #[allow(missing_docs)]
 pub struct System {
-    constellation_id: i32,
-    name: String,
-    planets: Option<Vec<SystemPlanet>>,
-    position: Position,
-    security_class: Option<String>,
-    security_status: f64,
-    star_id: Option<i32>,
-    stargates: Option<Vec<i32>>,
-    stations: Option<Vec<i32>>,
-    system_id: i32,
+    pub constellation_id: i32,
+    pub name: String,
+    pub planets: Option<Vec<SystemPlanet>>,
+    pub position: Position,
+    pub security_class: Option<String>,
+    pub security_status: f64,
+    pub star_id: Option<i32>,
+    pub stargates: Option<Vec<i32>>,
+    pub stations: Option<Vec<i32>>,
+    pub system_id: i32,
 }
 
 #[derive(Debug, Deserialize)]
 #[allow(missing_docs)]
 pub struct TypeDogmaAttribute {
-    attribute_id: i32,
-    value: f64,
+    pub attribute_id: i32,
+    pub value: f64,
 }
 
 #[derive(Debug, Deserialize)]
 #[allow(missing_docs)]
 pub struct TypeDogmaEffect {
-    effect_id: i32,
-    is_default: bool,
+    pub effect_id: i32,
+    pub is_default: bool,
 }
 
 #[derive(Debug, Deserialize)]
 #[allow(missing_docs)]
 pub struct Type {
-    capacity: Option<f64>,
-    description: String,
-    dogma_attributes: Option<Vec<TypeDogmaAttribute>>,
-    dogma_effects: Option<Vec<TypeDogmaEffect>>,
-    graphic_id: Option<i32>,
-    group_id: i32,
-    icon_id: Option<i32>,
-    market_group_id: Option<i32>,
-    mass: Option<f64>,
-    name: String,
-    packaged_volume: Option<f64>,
-    portion_size: Option<i32>,
-    published: bool,
-    radius: Option<f64>,
-    type_id: i32,
-    volume: Option<f64>,
+    pub capacity: Option<f64>,
+    pub description: String,
+    pub dogma_attributes: Option<Vec<TypeDogmaAttribute>>,
+    pub dogma_effects: Option<Vec<TypeDogmaEffect>>,
+    pub graphic_id: Option<i32>,
+    pub group_id: i32,
+    pub icon_id: Option<i32>,
+    pub market_group_id: Option<i32>,
+    pub mass: Option<f64>,
+    pub name: String,
+    pub packaged_volume: Option<f64>,
+    pub portion_size: Option<i32>,
+    pub published: bool,
+    pub radius: Option<f64>,
+    pub type_id: i32,
+    pub volume: Option<f64>,
 }
 
 impl<'a> UniverseGroup<'a> {
