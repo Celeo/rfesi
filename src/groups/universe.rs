@@ -103,7 +103,7 @@ pub struct Station {
     pub race_id: Option<i32>,
     pub reprocessing_efficiency: f64,
     pub reprocessing_stations_take: f64,
-    pub services: String,
+    pub services: Vec<String>,
     pub station_id: i32,
     pub system_id: i32,
     pub type_id: i32,
