@@ -181,7 +181,7 @@ impl<'a> UniverseGroup<'a> {
     api_get!(
         /// Information about a station
         get_station,
-        "get_universe_stations_station_id_ok",
+        "get_universe_stations_station_id",
         RequestType::Public,
         Station,
         (station_id: u64) => "{station_id}"
