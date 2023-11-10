@@ -402,14 +402,19 @@ impl Esi {
         };
 
         debug!("Authenticating with refresh token");
+        let mut body = HashMap::from([
+            ("grant_type", "refresh_token"),
+            ("refresh_token", &token),
+        ]);
+        if self.application_auth {
+            let option = self.client_id.as_ref();
+            body.insert("client_id", option.unwrap());
+        }
         let resp = self
             .client
             .post(TOKEN_URL)
             .headers(self.get_auth_headers()?)
-            .form(&HashMap::from([
-                ("grant_type", "refresh_token"),
-                ("refresh_token", &token),
-            ]))
+            .form(&body)
             .send()
             .await?;
         if resp.status() != 200 {
