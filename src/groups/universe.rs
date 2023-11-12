@@ -59,6 +59,19 @@ pub struct System {
 
 #[derive(Debug, Deserialize)]
 #[allow(missing_docs)]
+pub struct Ids {
+    pub characters: Option<Vec<Character>>,
+}
+
+#[derive(Debug, Deserialize)]
+#[allow(missing_docs)]
+pub struct Character {
+    pub id: u64,
+    pub name: String,
+}
+
+#[derive(Debug, Deserialize)]
+#[allow(missing_docs)]
 pub struct TypeDogmaAttribute {
     attribute_id: i32,
     value: f64,
@@ -159,5 +172,15 @@ impl<'a> UniverseGroup<'a> {
         RequestType::Public,
         Type,
         (type_id: i32) => "{type_id}"
+    );
+
+    api_post!(
+        /// Get IDs from a list of names
+        get_ids,
+        "post_universe_ids",
+        RequestType::Public,
+        Ids,
+        ,
+        names: &Vec<String>,
     );
 }
