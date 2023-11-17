@@ -109,6 +109,16 @@ pub struct Station {
     pub type_id: i32,
 }
 
+#[derive(Debug, Deserialize)]
+#[allow(missing_docs)]
+pub struct Structure {
+    pub name: String,
+    pub owner_id: i32,
+    pub position: Position,
+    pub solar_system_id: i32,
+    pub type_id: Option<i32>,
+}
+
 impl<'a> UniverseGroup<'a> {
     api_get!(
         /// Get a list of constellation ids
@@ -185,5 +195,14 @@ impl<'a> UniverseGroup<'a> {
         RequestType::Public,
         Station,
         (station_id: u64) => "{station_id}"
+    );
+
+    api_get!(
+        /// Returns information on requested structure if you are on the ACL. Otherwise, returns “Forbidden” for all inputs.
+        get_structure,
+        "get_universe_structures_structure_id",
+        RequestType::Authenticated,
+        Structure,
+        (structure_id: u64) => "{structure_id}"
     );
 }

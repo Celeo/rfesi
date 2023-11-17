@@ -34,5 +34,5 @@ pub struct SearchResult {
     pub region: Option<Vec<i32>>,
     pub solar_system: Option<Vec<i32>>,
     pub station: Option<Vec<i32>>,
-    pub structure: Option<Vec<i32>>,
+    pub structure: Option<Vec<u64>>,
 }
