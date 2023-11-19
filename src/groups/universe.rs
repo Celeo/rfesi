@@ -60,12 +60,18 @@ pub struct System {
 #[derive(Debug, Deserialize)]
 #[allow(missing_docs)]
 pub struct Ids {
-    pub characters: Option<Vec<Character>>,
+    pub characters: Option<Vec<Category>>,
+    pub alliances: Option<Vec<Category>>,
+    pub constellations: Option<Vec<Category>>,
+    pub agents: Option<Vec<Category>>,
+    pub regions: Option<Vec<Category>>,
+    pub systems: Option<Vec<Category>>,
+    pub stations: Option<Vec<Category>>,
 }
 
 #[derive(Debug, Deserialize)]
 #[allow(missing_docs)]
-pub struct Character {
+pub struct Category {
     pub id: u64,
     pub name: String,
 }
