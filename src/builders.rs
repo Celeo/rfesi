@@ -2,7 +2,6 @@
 
 use crate::prelude::*;
 use reqwest::{header, Client};
-use serde::Serialize;
 use serde_json::Value;
 use std::time::Duration;
 
@@ -70,6 +69,7 @@ pub struct EsiBuilder {
     pub(crate) version: Option<String>,
     pub(crate) client_id: Option<String>,
     pub(crate) client_secret: Option<String>,
+    pub(crate) application_auth: Option<bool>,
     pub(crate) callback_url: Option<String>,
     pub(crate) scope: Option<String>,
     pub(crate) access_token: Option<String>,
@@ -100,9 +100,15 @@ impl EsiBuilder {
         self
     }
 
-    /// Set the client_secret.
+    /// Set the client_secret (https://docs.esi.evetech.net/docs/sso/web_based_sso_flow.html).
     pub fn client_secret(mut self, val: &str) -> Self {
         self.client_secret = Some(val.to_owned());
+        self
+    }
+
+    /// Enable PKCE Authentication flow for Applications (https://docs.esi.evetech.net/docs/sso/native_sso_flow.html)
+    pub fn enable_application_authentication(mut self, val: bool) -> Self {
+        self.application_auth = Some(val);
         self
     }
 
@@ -268,7 +274,7 @@ mod tests {
 
     #[test]
     fn test_builder_to_json_empty() {
-        let json = r#"{"version":null,"client_id":null,"client_secret":null,"callback_url":null,"scope":null,"access_token":null,"access_expiration":null,"refresh_token":null,"user_agent":null,"http_timeout":null,"spec":null}"#;
+        let json = r#"{"version":null,"client_id":null,"client_secret":null,"application_auth":null,"callback_url":null,"scope":null,"access_token":null,"access_expiration":null,"refresh_token":null,"user_agent":null,"http_timeout":null,"spec":null}"#;
         assert_eq!(json, serde_json::to_string(&EsiBuilder::new()).unwrap());
     }
 

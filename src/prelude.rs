@@ -1,9 +1,10 @@
 //! Module for easy imports.
 
 pub use crate::builders::EsiBuilder;
-pub use crate::client::{Esi, RequestType};
+pub use crate::client::{AuthenticationInformation, Esi, RequestType};
 pub use crate::errors::{EsiError, EsiResult};
-pub(crate) use serde::Deserialize;
+pub use crate::pkce::PkceVerifier;
+pub(crate) use serde::{Deserialize, Serialize};
 
 /// Access token (JWT) payload.
 ///
@@ -11,7 +12,7 @@ pub(crate) use serde::Deserialize;
 /// the [ESI documentation].
 ///
 /// [ESI documentation]: https://docs.esi.evetech.net/docs/sso/validating_eve_jwt.html
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize, PartialEq)]
 #[allow(missing_docs)]
 pub struct TokenClaims {
     pub aud: Vec<String>,

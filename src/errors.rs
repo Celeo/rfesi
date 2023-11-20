@@ -9,6 +9,11 @@ pub enum EsiError {
     /// invalid when `.build()` is called.
     #[error("Missing required builder struct value '{0}'")]
     EmptyClientValue(String),
+    /// Error that can be thrown if the `EsiBuilder` struct is
+    /// invalid when `.build()` is called.
+    /// You need to specify either a client secret or enable application auth
+    #[error("Authentication flow information missing. You need to either specify client_secret or enable application auth.")]
+    MissingAuthenticationFlowInformation,
     /// You have to retrieve the ESI spec via `Esi::update_spec`
     /// before making this call.
     #[error("Missing spec")]
@@ -20,7 +25,7 @@ pub enum EsiError {
     /// Validation of the JWT failed.
     #[cfg(feature = "validate_jwt")]
     #[error("JWT validation failed")]
-    JwtValidationFailed(#[from] alcoholic_jwt::ValidationError),
+    JwtValidationFailed(#[from] jsonwebtoken::errors::Error),
     /// Error that can be thrown by any function that makes HTTP
     /// calls our to external resources for response codes that
     /// aren't valid as defined [by reqwest].
@@ -57,6 +62,10 @@ pub enum EsiError {
     /// to fetch another access token.
     #[error("Access token is expired, and no refresh token is present")]
     AccessTokenExpired,
+    /// Error when a access_token needs to be refreshed, but no refresh
+    /// token could be found to refresh the access token
+    #[error("No refresh token available to request an access token")]
+    NoRefreshTokenAvailable,
 }
 
 /// Crate `Result` wrapper.

@@ -1,6 +1,11 @@
 //! Main logic
 
-use crate::{groups::*, prelude::*};
+use std::{
+    collections::HashMap,
+    str::FromStr,
+    time::{SystemTime, UNIX_EPOCH},
+};
+
 use base64::engine::{general_purpose::STANDARD as base64, Engine};
 use log::{debug, error};
 #[cfg(feature = "random_state")]
@@ -9,13 +14,11 @@ use reqwest::{
     header::{self, HeaderMap, HeaderValue},
     Client, Method,
 };
-use serde::{de::DeserializeOwned, Deserialize};
+use serde::de::DeserializeOwned;
 use serde_json::Value;
-use std::{
-    collections::HashMap,
-    str::FromStr,
-    time::{SystemTime, UNIX_EPOCH},
-};
+
+use crate::pkce::PkceVerifier;
+use crate::{groups::*, pkce, prelude::*};
 
 const BASE_URL: &str = "https://esi.evetech.net/";
 const AUTHORIZE_URL: &str = "https://login.eveonline.com/v2/oauth/authorize";
@@ -50,6 +53,20 @@ pub enum RequestType {
     Authenticated,
 }
 
+/// AuthenticationInformation contains data needed to complete the requested authentication flow.
+pub struct AuthenticationInformation {
+    /// URL to call/pass to users to initiate an authentication and get an auth code from ESI.
+    pub authorization_url: String,
+    /// If the default feature "random_state" is enabled, the returned state field string will be
+    /// random; otherwise it'll be "rfesi_unused". The ESI docs link to
+    /// [this auth0 page](https://auth0.com/docs/secure/attack-protection/state-parameters)
+    /// to explain. You need to check the state yourself when the response from ESI is received.
+    pub state: String,
+    /// Filled if you've selected PKCE authentication for application.
+    /// You will need it to authenticate using the code received from ESI.
+    pub pkce_verifier: Option<PkceVerifier>,
+}
+
 /// Struct to interact with ESI.
 ///
 /// Construct an instance of this struct using [`EsiBuilder`](./struct.EsiBuilder.html).
@@ -73,6 +90,7 @@ pub struct Esi {
     pub(crate) client_secret: Option<String>,
     pub(crate) callback_url: Option<String>,
     pub(crate) scope: String,
+    pub(crate) application_auth: bool,
     /// The access token from ESI, if set.
     pub access_token: Option<String>,
     /// The millisecond unix timestamp after which the access token expires, if present.
@@ -95,6 +113,7 @@ impl Esi {
             client_secret: builder.client_secret,
             callback_url: builder.callback_url,
             scope: builder.scope.unwrap_or_else(|| "".to_owned()),
+            application_auth: builder.application_auth.unwrap_or(false),
             access_token: builder.access_token,
             access_expiration: builder.access_expiration,
             refresh_token: builder.refresh_token,
@@ -149,22 +168,28 @@ impl Esi {
     fn check_client_info(&self) -> EsiResult<()> {
         for (name, value) in &[
             ("client_id", &self.client_id),
-            ("client_secret", &self.client_secret),
             ("callback_url", &self.callback_url),
         ] {
             if value.is_none() {
                 return Err(EsiError::EmptyClientValue(name.to_string()));
             }
         }
+
+        if self.client_secret.is_none() {
+            if !self.application_auth {
+                return Err(EsiError::MissingAuthenticationFlowInformation);
+            }
+        } else if self.application_auth {
+            return Err(EsiError::MissingAuthenticationFlowInformation);
+        }
+
         Ok(())
     }
 
-    /// Generate and return the URL required for the user to grant you an auth code.
+    /// Generate and return the URL required for the user to grant you an auth code, as wells as
+    /// infos for future authentication request.
     ///
-    /// The second item of the returned tuple is the "state". If the default feature
-    /// "random_state" is enabled, this string will be random; otherwise it'll be
-    /// "rfesi_unused". The ESI docs link to [this auth0 page] to explain. You can
-    /// inspect the URL returned by ESI to your web service to ensure it matches.
+    /// You can inspect the URL returned by ESI to your web service to ensure it matches.
     /// No checking is done by `rfesi`.
     ///
     /// # Example
@@ -177,8 +202,9 @@ impl Esi {
     /// #     .callback_url("your_callback_url")
     /// #     .build()
     /// #     .unwrap();
-    /// let (url, state) = esi.get_authorize_url().unwrap();
+    /// let auth_info = esi.get_authorize_url().unwrap();
     /// // then send your user to that URL
+    /// let url = auth_info.authorization_url;
     /// ```
     ///
     /// If you opted to not include client information in
@@ -186,7 +212,7 @@ impl Esi {
     /// an error instead.
     ///
     /// [this auth0 page]: https://auth0.com/docs/secure/attack-protection/state-parameters
-    pub fn get_authorize_url(&self) -> EsiResult<(String, String)> {
+    pub fn get_authorize_url(&self) -> EsiResult<AuthenticationInformation> {
         self.check_client_info()?;
         #[cfg(feature = "random_state")]
         let state = rand::thread_rng()
@@ -196,33 +222,47 @@ impl Esi {
             .collect();
         #[cfg(not(feature = "random_state"))]
         let state = "rfesi_unused".to_string();
-        Ok((
-            format!(
-                "{}?response_type=code&redirect_uri={}&client_id={}&scope={}&state={}",
-                AUTHORIZE_URL,
-                self.callback_url.as_ref().unwrap(),
-                self.client_id.as_ref().unwrap(),
-                self.scope,
-                &state
-            ),
+        let mut url = format!(
+            "{}?response_type=code&redirect_uri={}&client_id={}&scope={}&state={}",
+            AUTHORIZE_URL,
+            self.callback_url.as_ref().unwrap(),
+            self.client_id.as_ref().unwrap(),
+            self.scope,
+            &state
+        );
+        let mut pkce_verifier = None;
+        // PKCE can be theoretically combined with client secret, but not sure if ESI supports it
+        if self.client_secret.is_none() && self.application_auth {
+            let pkce = pkce::generate()?;
+            pkce_verifier = Some(pkce.verifier);
+            url = format!(
+                "{}&code_challenge={}&code_challenge_method=S256",
+                url, pkce.challenge
+            )
+        }
+        Ok(AuthenticationInformation {
+            authorization_url: url,
             state,
-        ))
+            pkce_verifier,
+        })
     }
 
     fn get_auth_headers(&self) -> EsiResult<HeaderMap> {
         self.check_client_info()?;
         let mut map = HeaderMap::new();
-        let value = base64
-            .encode(format!(
-                "{}:{}",
-                self.client_id.as_ref().unwrap(),
-                self.client_secret.as_ref().unwrap()
-            ))
-            .replace(['\n', ' '], "");
-        map.insert(
-            header::AUTHORIZATION,
-            HeaderValue::from_str(&format!("Basic {value}"))?,
-        );
+        if self.client_secret.is_some() {
+            let value = base64
+                .encode(format!(
+                    "{}:{}",
+                    self.client_id.as_ref().unwrap(),
+                    self.client_secret.as_ref().unwrap()
+                ))
+                .replace(['\n', ' '], "");
+            map.insert(
+                header::AUTHORIZATION,
+                HeaderValue::from_str(&format!("Basic {value}"))?,
+            );
+        }
         map.insert(
             header::HOST,
             HeaderValue::from_static("login.eveonline.com"),
@@ -240,7 +280,7 @@ impl Esi {
     /// token's claims will be returned. If the feature is not enabled, then
     /// the returned value will be `None`.
     ///
-    /// # Example
+    /// # Example (client secret)
     /// ```rust,no_run
     /// # async fn run() {
     /// # use rfesi::prelude::*;
@@ -251,19 +291,43 @@ impl Esi {
     /// #     .callback_url("your_callback_url")
     /// #     .build()
     /// #     .unwrap();
-    /// let claims = esi.authenticate("abcdef...").await.unwrap();
+    /// let claims = esi.authenticate("abcdef...", None).await.unwrap();
     /// # }
     /// ```
-    pub async fn authenticate(&mut self, code: &str) -> EsiResult<Option<TokenClaims>> {
+    ///
+    /// # Example (PKCE/Application authentication)
+    /// ```rust,no_run
+    /// # use rfesi::prelude::*;
+    ///  async fn run() {
+    /// # let mut esi = EsiBuilder::new()
+    /// #     .user_agent("some user agent")
+    /// #     .client_id("your_client_id")
+    /// #     .callback_url("your_callback_url")
+    /// #     .enable_application_authentication(true)
+    /// #     .build()
+    /// #     .unwrap();
+    /// # let auth_infos = esi.get_authorize_url().unwrap();
+    /// # let claims = esi.authenticate("abcdef...", auth_infos.pkce_verifier).await.unwrap();
+    /// # }
+    /// ```
+    pub async fn authenticate(
+        &mut self,
+        code: &str,
+        pkce_verifier: Option<PkceVerifier>,
+    ) -> EsiResult<Option<TokenClaims>> {
         debug!("Authenticating with code {}", code);
+        let mut body = HashMap::from([("grant_type", "authorization_code"), ("code", code)]);
+        if self.application_auth {
+            let option = self.client_id.as_ref();
+            body.insert("client_id", option.unwrap());
+            body.insert("code_verifier", pkce_verifier.as_ref().unwrap());
+        }
+
         let resp = self
             .client
             .post(TOKEN_URL)
             .headers(self.get_auth_headers()?)
-            .form(&HashMap::from([
-                ("grant_type", "authorization_code"),
-                ("code", code),
-            ]))
+            .form(&body)
             .send()
             .await?;
         if resp.status() != 200 {
@@ -286,7 +350,7 @@ impl Esi {
             .await?,
         );
         self.access_token = Some(data.access_token);
-        // the response's "expires_in" field is seconds, need millis
+        // the response's "expires_in" field is seconds but need millis
         self.access_expiration = Some((data.expires_in as u128 * 1_000) + current_time_millis()?);
         self.refresh_token = data.refresh_token;
         Ok(claim_data)
@@ -315,16 +379,61 @@ impl Esi {
     /// # }
     /// ```
     pub async fn use_refresh_token(&mut self, refresh_token: &str) -> EsiResult<()> {
-        // note: don't log the token
+        self.refresh_access_token(Some(refresh_token)).await?;
+        Ok(())
+    }
+
+    /// Authenticate via a refresh token given as input, or using the internal refresh_token if it's available.
+    ///
+    /// The functionality of a refresh token allows re-authenticating this struct
+    /// instance without prompting the user to log into EVE SSO again. When the user
+    /// is authenticated in that manner, a refresh token is returned and available
+    /// via the `refresh_token` struct field. Store this securely should you wish
+    /// to later make authenticate calls for that user.
+    ///
+    /// # Example with internal token
+    /// ```rust,no_run
+    /// # async fn run() {
+    /// # use rfesi::prelude::*;
+    /// # let mut esi = EsiBuilder::new()
+    /// #     .user_agent("some user agent")
+    /// #     .refresh_token(Some("MyRefreshToken"))
+    /// #     .build()
+    /// #     .unwrap();
+    /// esi.refresh_access_token(None).await.unwrap();
+    /// # }
+    /// ```
+    /// # Example with input token
+    /// ```rust,no_run
+    /// # async fn run() {
+    /// # use rfesi::prelude::*;
+    /// # let mut esi = EsiBuilder::new()
+    /// #     .user_agent("some user agent")
+    /// #     .build()
+    /// #     .unwrap();
+    /// esi.refresh_access_token(Some("MyRefreshToken")).await.unwrap();
+    /// # }
+    /// ```
+    pub async fn refresh_access_token(&mut self, refresh_token: Option<&str>) -> EsiResult<()> {
+        let token = if let Some(token) = refresh_token {
+            token.to_string()
+        } else if let Some(token) = self.refresh_token.clone() {
+            token
+        } else {
+            return Err(EsiError::NoRefreshTokenAvailable);
+        };
+
         debug!("Authenticating with refresh token");
+        let mut body = HashMap::from([("grant_type", "refresh_token"), ("refresh_token", &token)]);
+        if self.application_auth {
+            let option = self.client_id.as_ref();
+            body.insert("client_id", option.unwrap());
+        }
         let resp = self
             .client
             .post(TOKEN_URL)
             .headers(self.get_auth_headers()?)
-            .form(&HashMap::from([
-                ("grant_type", "refresh_token"),
-                ("refresh_token", refresh_token),
-            ]))
+            .form(&body)
             .send()
             .await?;
         if resp.status() != 200 {
