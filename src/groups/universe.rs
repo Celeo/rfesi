@@ -232,6 +232,6 @@ impl<'a> UniverseGroup<'a> {
         RequestType::Public,
         Ids,
         ,
-        names: &Vec<String>,
+names: &[&str],
     );
 }
