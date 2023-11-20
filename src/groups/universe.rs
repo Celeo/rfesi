@@ -226,12 +226,12 @@ impl<'a> UniverseGroup<'a> {
     );
 
     api_post!(
-            /// Get IDs from a list of names
-            get_ids,
-            "post_universe_ids",
-            RequestType::Public,
-            Ids,
-            ,
-    names: &[&str],
-        );
+        /// Get IDs from a list of names
+        get_ids,
+        "post_universe_ids",
+        RequestType::Public,
+        Ids,
+        ,
+        names: &[&str],
+    );
 }
