@@ -59,6 +59,25 @@ pub struct System {
 
 #[derive(Debug, Deserialize)]
 #[allow(missing_docs)]
+pub struct Ids {
+    pub characters: Option<Vec<Category>>,
+    pub alliances: Option<Vec<Category>>,
+    pub constellations: Option<Vec<Category>>,
+    pub agents: Option<Vec<Category>>,
+    pub regions: Option<Vec<Category>>,
+    pub systems: Option<Vec<Category>>,
+    pub stations: Option<Vec<Category>>,
+}
+
+#[derive(Debug, Deserialize)]
+#[allow(missing_docs)]
+pub struct Category {
+    pub id: u64,
+    pub name: String,
+}
+
+#[derive(Debug, Deserialize)]
+#[allow(missing_docs)]
 pub struct TypeDogmaAttribute {
     pub attribute_id: i32,
     pub value: f64,
@@ -204,5 +223,15 @@ impl<'a> UniverseGroup<'a> {
         RequestType::Authenticated,
         Structure,
         (structure_id: u64) => "{structure_id}"
+    );
+
+    api_post!(
+        /// Get IDs from a list of names
+        get_ids,
+        "post_universe_ids",
+        RequestType::Public,
+        Ids,
+        ,
+        names: &[&str],
     );
 }
