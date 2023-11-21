@@ -21,7 +21,7 @@ impl<'a> SearchGroup<'a> {
     );
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 #[allow(missing_docs)]
 pub struct SearchResult {
     pub agent: Option<Vec<i32>>,
