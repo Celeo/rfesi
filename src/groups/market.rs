@@ -2,7 +2,7 @@
 
 use crate::prelude::*;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 #[allow(missing_docs)]
 pub struct HistoryItem {
     pub average: f64,
@@ -30,7 +30,7 @@ pub struct MarketOrder {
     pub volume_total: i32,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 #[allow(missing_docs)]
 pub struct PriceItem {
     pub adjusted_price: Option<f64>,

@@ -7,14 +7,14 @@ pub struct IndustryGroup<'a> {
     pub(crate) esi: &'a Esi,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 #[allow(missing_docs)]
 pub struct CostIndex {
     pub activity: String,
     pub cost_index: f32,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 #[allow(missing_docs)]
 pub struct IndustrialSystem {
     pub cost_indices: Vec<CostIndex>,
