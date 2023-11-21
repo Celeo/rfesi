@@ -15,7 +15,7 @@ pub struct Position {
     pub z: f64,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 #[allow(missing_docs)]
 pub struct Constellation {
     pub constellation_id: i32,
@@ -25,7 +25,7 @@ pub struct Constellation {
     pub systems: Vec<i32>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 #[allow(missing_docs)]
 pub struct Region {
     pub constellations: Vec<i32>,
@@ -34,7 +34,7 @@ pub struct Region {
     pub region_id: i32,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 #[allow(missing_docs)]
 pub struct SystemPlanet {
     pub asteroid_belts: Option<Vec<i32>>,
@@ -42,7 +42,7 @@ pub struct SystemPlanet {
     pub planet_id: i32,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 #[allow(missing_docs)]
 pub struct System {
     pub constellation_id: i32,
@@ -76,21 +76,21 @@ pub struct Category {
     pub name: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 #[allow(missing_docs)]
 pub struct TypeDogmaAttribute {
     pub attribute_id: i32,
     pub value: f64,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 #[allow(missing_docs)]
 pub struct TypeDogmaEffect {
     pub effect_id: i32,
     pub is_default: bool,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 #[allow(missing_docs)]
 pub struct Type {
     pub capacity: Option<f64>,
@@ -128,7 +128,7 @@ pub struct Station {
     pub type_id: i32,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 #[allow(missing_docs)]
 pub struct Structure {
     pub name: String,
