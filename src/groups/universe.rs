@@ -7,7 +7,7 @@ pub struct UniverseGroup<'a> {
     pub(crate) esi: &'a Esi,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 #[allow(missing_docs)]
 pub struct Position {
     pub x: f64,
@@ -111,7 +111,7 @@ pub struct Type {
     pub volume: Option<f64>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 #[allow(missing_docs)]
 pub struct Station {
     pub max_dockable_ship_volume: f64,
