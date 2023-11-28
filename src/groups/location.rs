@@ -8,8 +8,8 @@ pub struct LocationGroup<'a> {
 #[derive(Debug, Deserialize)]
 #[allow(missing_docs)]
 pub struct LocationInfo {
-    pub solar_system_id: u64,
-    pub station_id: Option<u64>,
+    pub solar_system_id: i32,
+    pub station_id: Option<i32>,
     pub structure_id: Option<u64>,
 }
 
@@ -18,7 +18,7 @@ pub struct LocationInfo {
 pub struct OnlineStatus {
     pub last_login: Option<String>,
     pub last_logout: Option<String>,
-    pub logins: Option<u64>,
+    pub logins: Option<i32>,
     pub online: bool,
 }
 
@@ -27,7 +27,7 @@ pub struct OnlineStatus {
 pub struct CurrentShip {
     pub ship_item_id: u64,
     pub ship_name: String,
-    pub ship_type_id: u64,
+    pub ship_type_id: i32,
 }
 
 impl<'a> LocationGroup<'a> {
