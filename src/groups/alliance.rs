@@ -5,7 +5,7 @@ pub struct AllianceGroup<'a> {
     pub(crate) esi: &'a Esi,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 #[allow(missing_docs)]
 pub struct AllianceInfo {
     pub creator_corporation_id: u64,
