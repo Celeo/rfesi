@@ -38,7 +38,7 @@ pub struct PriceItem {
     pub type_id: i32,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 #[allow(missing_docs)]
 pub struct CharacterOrder {
     pub duration: i32,
