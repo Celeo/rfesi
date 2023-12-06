@@ -99,6 +99,6 @@ impl<'a> MarketGroup<'a> {
         "get_characters_character_id_orders",
         RequestType::Authenticated,
         Vec<CharacterOrder>,
-        (character_id: u64) => "{character_id}"
+        (character_id: i32) => "{character_id}"
     );
 }
