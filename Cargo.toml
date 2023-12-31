@@ -1,6 +1,6 @@
 [package]
 name = "rfesi"
-version = "0.37.0"
+version = "0.38.0"
 authors = ["Celeo <mattboulanger@fastmail.com>"]
 edition = "2021"
 description = "Rust API for EVE Online's ESI"
