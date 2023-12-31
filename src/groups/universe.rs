@@ -157,41 +157,6 @@ pub struct GroupsGroup {
     pub types: Vec<i32>,
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone)]
-#[allow(missing_docs)]
-pub struct DogmaAtribute {
-    pub attribute_id: i32,
-    pub value: f64,
-}
-
-#[derive(Debug, Deserialize, Serialize, Clone)]
-#[allow(missing_docs)]
-pub struct DogmaEffect {
-    pub effect_id: i32,
-    pub is_default: bool,
-}
-
-#[derive(Debug, Deserialize, Serialize, Clone)]
-#[allow(missing_docs)]
-pub struct TypesType {
-    pub capacity: f64,
-    pub description: String,
-    pub dogma_attributes: Vec<DogmaAtribute>,
-    pub dogma_effects: Option<Vec<DogmaEffect>>,
-    pub graphic_id: Option<i32>,
-    pub group_id: i32,
-    pub icon_id: i32,
-    pub market_group_id: Option<i32>,
-    pub mass: f64,
-    pub name: String,
-    pub packaged_volume: f64,
-    pub portion_size: i32,
-    pub published: bool,
-    pub radius: f64,
-    pub type_id: i32,
-    pub volume: f64,
-}
-
 impl<'a> UniverseGroup<'a> {
     api_get!(
         /// Get information on a category
@@ -216,7 +181,7 @@ impl<'a> UniverseGroup<'a> {
         get_universe_types_type,
         "get_universe_types_type_id",
         RequestType::Public,
-        TypesType,
+        Type,
         (type_id: i32) => "{type_id}"
     );
 
