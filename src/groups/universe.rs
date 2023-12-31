@@ -138,7 +138,53 @@ pub struct Structure {
     pub type_id: Option<i32>,
 }
 
+#[derive(Debug, Deserialize, Serialize, Clone)]
+#[allow(missing_docs)]
+pub struct CategoriesCategory {
+    pub category_id: i32,
+    pub groups: Vec<i32>,
+    pub name: String,
+    pub published: bool,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
+#[allow(missing_docs)]
+pub struct Group {
+    pub category_id: i32,
+    pub group_id: i32,
+    pub name: String,
+    pub published: bool,
+    pub types: Vec<i32>,
+}
+
 impl<'a> UniverseGroup<'a> {
+    api_get!(
+        /// Get information on a category
+        get_universe_categories_category,
+        "get_universe_categories_category_id",
+        RequestType::Public,
+        CategoriesCategory,
+        (category_id: i32) => "{category_id}"
+    );
+
+    api_get!(
+        /// Get information on a group
+        get_universe_groups_group,
+        "get_universe_groups_group_id",
+        RequestType::Public,
+        Group,
+        (group_id: i32) => "{group_id}"
+    );
+
+    api_get!(
+        /// Get information on a type
+        get_universe_types_type,
+        "get_universe_types_type_id",
+        RequestType::Public,
+        Type,
+        (type_id: i32) => "{type_id}"
+    );
+
     api_get!(
         /// Get a list of constellation ids
         get_constellation_ids,
