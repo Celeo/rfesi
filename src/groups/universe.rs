@@ -149,7 +149,7 @@ pub struct CategoriesCategory {
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 #[allow(missing_docs)]
-pub struct GroupsGroup {
+pub struct Group {
     pub category_id: i32,
     pub group_id: i32,
     pub name: String,
@@ -172,7 +172,7 @@ impl<'a> UniverseGroup<'a> {
         get_universe_groups_group,
         "get_universe_groups_group_id",
         RequestType::Public,
-        GroupsGroup,
+        Group,
         (group_id: i32) => "{group_id}"
     );
 
