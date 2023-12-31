@@ -138,7 +138,88 @@ pub struct Structure {
     pub type_id: Option<i32>,
 }
 
+#[derive(Debug, Deserialize, Serialize, Clone)]
+#[allow(missing_docs)]
+pub struct CategoriesCategory {
+    pub category_id: i32,
+    pub groups: Vec<i32>,
+    pub name: String,
+    pub published: bool,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
+#[allow(missing_docs)]
+pub struct GroupsGroup {
+    pub category_id: i32,
+    pub group_id: i32,
+    pub name: String,
+    pub published: bool,
+    pub types: Vec<i32>,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
+#[allow(missing_docs)]
+pub struct DogmaAtribute {
+    pub attribute_id: i32,
+    pub value: f64,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
+#[allow(missing_docs)]
+pub struct DogmaEffect {
+    pub effect_id: i32,
+    pub is_default: bool,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
+#[allow(missing_docs)]
+pub struct TypesType {
+    pub capacity: f64,
+    pub description: String,
+    pub dogma_attributes: Vec<DogmaAtribute>,
+    pub dogma_effects: Option<Vec<DogmaEffect>>,
+    pub graphic_id: Option<i32>,
+    pub group_id: i32,
+    pub icon_id: i32,
+    pub market_group_id: Option<i32>,
+    pub mass: f64,
+    pub name: String,
+    pub packaged_volume: f64,
+    pub portion_size: i32,
+    pub published: bool,
+    pub radius: f64,
+    pub type_id: i32,
+    pub volume: f64,
+}
+
 impl<'a> UniverseGroup<'a> {
+    api_get!(
+        /// Get information on a category
+        get_universe_categories_category,
+        "get_universe_categories_category_id",
+        RequestType::Public,
+        CategoriesCategory,
+        (category_id: i32) => "{category_id}"
+    );
+
+    api_get!(
+        /// Get information on a group
+        get_universe_groups_group,
+        "get_universe_groups_group_id",
+        RequestType::Public,
+        GroupsGroup,
+        (group_id: i32) => "{group_id}"
+    );
+
+    api_get!(
+        /// Get information on a type
+        get_universe_types_type,
+        "get_universe_types_type_id",
+        RequestType::Public,
+        TypesType,
+        (type_id: i32) => "{type_id}"
+    );
+
     api_get!(
         /// Get a list of constellation ids
         get_constellation_ids,
