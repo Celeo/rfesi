@@ -64,6 +64,7 @@ impl<'a> IndustryGroup<'a> {
         "get_characters_character_id_industry_jobs",
         RequestType::Authenticated,
         Vec<IndustryJob>,
-        (character_id: i32) => "{character_id}"
+        (character_id: i32) => "{character_id}";
+        Optional(include_completed: bool) => "include_completed"
     );
 }
