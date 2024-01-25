@@ -7,7 +7,7 @@ use std::{
 };
 
 use base64::engine::{general_purpose::STANDARD as base64, Engine};
-use log::{debug, error};
+use log::{debug, error, warn};
 #[cfg(feature = "random_state")]
 use rand::{distributions::Alphanumeric, Rng};
 use reqwest::{
@@ -331,7 +331,7 @@ impl Esi {
             .send()
             .await?;
         if resp.status() != 200 {
-            error!(
+            warn!(
                 "Got status {} when making call to authenticate",
                 resp.status()
             );
@@ -437,7 +437,7 @@ impl Esi {
             .send()
             .await?;
         if resp.status() != 200 {
-            error!(
+            warn!(
                 "Got status {} when making call to authenticate via a refresh token",
                 resp.status()
             );
@@ -530,11 +530,6 @@ impl Esi {
         let req = req_builder.build()?;
         let resp = self.client.execute(req).await?;
         if !resp.status().is_success() {
-            error!(
-                "Got status {} when requesting data from {}",
-                resp.status(),
-                url
-            );
             return Err(EsiError::InvalidStatusCode(resp.status().as_u16()));
         }
         let text = resp.text().await?;
