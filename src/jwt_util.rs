@@ -14,7 +14,7 @@ async fn get_keys_url(client: &Client) -> EsiResult<String> {
     let resp = client.get(TOKEN_AUTH_INFO_URL).send().await?;
     if resp.status() != 200 {
         error!(
-            "Got status {} when making call to authenticate",
+            "Got status {} when making call to get token info",
             resp.status()
         );
         return Err(EsiError::InvalidStatusCode(resp.status().as_u16()));
