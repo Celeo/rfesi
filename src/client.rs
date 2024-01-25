@@ -1,11 +1,5 @@
 //! Main logic
 
-use std::{
-    collections::HashMap,
-    str::FromStr,
-    time::{SystemTime, UNIX_EPOCH},
-};
-
 use base64::engine::{general_purpose::STANDARD as base64, Engine};
 use log::{debug, error, warn};
 #[cfg(feature = "random_state")]
@@ -16,6 +10,11 @@ use reqwest::{
 };
 use serde::de::DeserializeOwned;
 use serde_json::Value;
+use std::{
+    collections::HashMap,
+    str::FromStr,
+    time::{SystemTime, UNIX_EPOCH},
+};
 
 use crate::pkce::PkceVerifier;
 use crate::{groups::*, pkce, prelude::*};
