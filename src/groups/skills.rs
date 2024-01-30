@@ -1,25 +1,25 @@
 use crate::prelude::*;
 
+/// Endpoints for Skills
+pub struct SkillsGroup<'a> {
+    pub(crate) esi: &'a Esi,
+}
+
 #[derive(Debug, Deserialize)]
 #[allow(missing_docs)]
 pub struct Skill {
-    pub skill_id: u32,
-    pub active_skill_level: u32,
-    pub skillpoints_in_skill: u64,
-    pub trained_skill_level: u32,
+    pub skill_id: i32,
+    pub active_skill_level: i32,
+    pub skillpoints_in_skill: i64,
+    pub trained_skill_level: i32,
 }
 
 #[derive(Debug, Deserialize)]
 #[allow(missing_docs)]
 pub struct Skills {
     pub skills: Vec<Skill>,
-    pub total_sp: u64,
-    pub unallocated_sp: u32,
-}
-
-/// Endpoints for Skills
-pub struct SkillsGroup<'a> {
-    pub(crate) esi: &'a Esi,
+    pub total_sp: i64,
+    pub unallocated_sp: i32,
 }
 
 impl<'a> SkillsGroup<'a> {
@@ -29,6 +29,6 @@ impl<'a> SkillsGroup<'a> {
         "get_characters_character_id_skills",
         RequestType::Authenticated,
         Skills,
-        (character_id: u64) => "{character_id}"
+        (character_id: i32) => "{character_id}"
     );
 }

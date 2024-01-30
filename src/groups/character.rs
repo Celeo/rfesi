@@ -8,10 +8,10 @@ pub struct CharacterGroup<'a> {
 #[derive(Debug, Deserialize)]
 #[allow(missing_docs)]
 pub struct CharacterPublicInfo {
-    pub alliance_id: Option<u64>,
+    pub alliance_id: Option<i32>,
     pub birthday: String,
-    pub bloodline_id: u64,
-    pub corporation_id: u64,
+    pub bloodline_id: i32,
+    pub corporation_id: i32,
     pub description: Option<String>,
     pub gender: String,
     pub name: String,
@@ -23,9 +23,9 @@ pub struct CharacterPublicInfo {
 #[derive(Debug, Deserialize)]
 #[allow(missing_docs)]
 pub struct CharacterCorporationHistoryItem {
-    pub corporation_id: u64,
+    pub corporation_id: i32,
     pub is_deleted: Option<bool>,
-    pub record_id: u64,
+    pub record_id: i32,
     pub start_date: String,
 }
 
@@ -41,23 +41,23 @@ pub struct CharacterPortraitInfo {
 #[derive(Debug, Deserialize)]
 #[allow(missing_docs)]
 pub struct CharacterAffiliation {
-    pub alliance_id: Option<u64>,
-    pub character_id: u64,
-    pub corporation_id: u64,
-    pub faction_id: Option<u64>,
+    pub alliance_id: Option<i32>,
+    pub character_id: i32,
+    pub corporation_id: i32,
+    pub faction_id: Option<i32>,
 }
 
 #[derive(Debug, Deserialize)]
 #[allow(missing_docs)]
 pub struct Blueprint {
-    pub item_id: u64,
+    pub item_id: i64,
     pub location_flag: String,
-    pub location_id: u64,
-    pub material_efficiency: u8,
+    pub location_id: i64,
+    pub material_efficiency: i32,
     pub quantity: i32,
-    pub runs: i64,
-    pub time_efficiency: u8,
-    pub type_id: u64,
+    pub runs: i32,
+    pub time_efficiency: i32,
+    pub type_id: i32,
 }
 
 impl<'a> CharacterGroup<'a> {
@@ -67,7 +67,7 @@ impl<'a> CharacterGroup<'a> {
         "get_characters_character_id",
         RequestType::Public,
         CharacterPublicInfo,
-        (character_id: u64) => "{character_id}"
+        (character_id: i32) => "{character_id}"
     );
 
     api_get!(
@@ -76,7 +76,7 @@ impl<'a> CharacterGroup<'a> {
         "get_characters_character_id_corporationhistory",
         RequestType::Public,
         Vec<CharacterCorporationHistoryItem>,
-        (character_id: u64) => "{character_id}"
+        (character_id: i32) => "{character_id}"
     );
 
     api_get!(
@@ -85,7 +85,7 @@ impl<'a> CharacterGroup<'a> {
         "get_characters_character_id_portrait",
         RequestType::Public,
         CharacterPortraitInfo,
-        (character_id: u64) => "{character_id}"
+        (character_id: i32) => "{character_id}"
     );
 
     api_post!(
@@ -104,7 +104,7 @@ impl<'a> CharacterGroup<'a> {
         "get_characters_character_id_blueprints",
         RequestType::Authenticated,
         Vec<Blueprint>,
-        (character_id: u64) => "{character_id}"
+        (character_id: i32) => "{character_id}"
     );
 
     // more endpoints ...

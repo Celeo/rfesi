@@ -10,26 +10,26 @@ pub struct AssetsGroup<'a> {
 pub struct Asset {
     pub is_blueprint_copy: Option<bool>,
     pub is_singleton: bool,
-    pub item_id: u64,
+    pub item_id: i64,
     pub location_flag: String,
-    pub location_id: u64,
+    pub location_id: i64,
     pub location_type: String,
-    pub quantity: u64,
-    pub type_id: u64,
+    pub quantity: i32,
+    pub type_id: i32,
 }
 
 #[derive(Debug, Deserialize)]
 #[allow(missing_docs)]
 pub struct AssetLocationPosition {
-    pub x: u64,
-    pub y: u64,
-    pub z: u64,
+    pub x: f64,
+    pub y: f64,
+    pub z: f64,
 }
 
 #[derive(Debug, Deserialize)]
 #[allow(missing_docs)]
 pub struct AssetLocation {
-    pub item_id: u64,
+    pub item_id: i64,
     pub position: AssetLocationPosition,
 }
 
@@ -47,7 +47,7 @@ impl<'a> AssetsGroup<'a> {
         "get_characters_character_id_assets",
         RequestType::Authenticated,
         Vec<Asset>,
-        (character_id: u64) => "{character_id}"
+        (character_id: i32) => "{character_id}"
     );
 
     api_post!(
@@ -56,8 +56,8 @@ impl<'a> AssetsGroup<'a> {
         "post_characters_character_id_assets_locations",
         RequestType::Authenticated,
         Vec<AssetLocation>,
-        (character_id: u64) => "{character_id}",
-        item_ids: &[u64],
+        (character_id: i32) => "{character_id}",
+        item_ids: &[i64],
     );
 
     api_post!(
@@ -66,7 +66,7 @@ impl<'a> AssetsGroup<'a> {
         "post_characters_character_id_assets_names",
         RequestType::Authenticated,
         Vec<AssetName>,
-        (character_id: u64) => "{character_id}",
+        (character_id: i32) => "{character_id}",
         item_ids: &[u64],
     );
 

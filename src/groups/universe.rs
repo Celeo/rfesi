@@ -72,7 +72,7 @@ pub struct Ids {
 #[derive(Debug, Deserialize)]
 #[allow(missing_docs)]
 pub struct Category {
-    pub id: u64,
+    pub id: i32,
     pub name: String,
 }
 
@@ -259,7 +259,7 @@ impl<'a> UniverseGroup<'a> {
         "get_universe_stations_station_id",
         RequestType::Public,
         Station,
-        (station_id: u64) => "{station_id}"
+        (station_id: i32) => "{station_id}"
     );
 
     api_get!(
@@ -268,7 +268,7 @@ impl<'a> UniverseGroup<'a> {
         "get_universe_structures_structure_id",
         RequestType::Authenticated,
         Structure,
-        (structure_id: u64) => "{structure_id}"
+        (structure_id: i64) => "{structure_id}"
     );
 
     api_post!(

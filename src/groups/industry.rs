@@ -11,7 +11,7 @@ pub struct IndustryGroup<'a> {
 #[allow(missing_docs)]
 pub struct CostIndex {
     pub activity: String,
-    pub cost_index: f32,
+    pub cost_index: f64,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]

@@ -3,17 +3,17 @@ use crate::prelude::*;
 #[derive(Debug, Deserialize, Serialize, Clone)]
 #[allow(missing_docs)]
 pub struct CorporationPublicInfo {
-    pub alliance_id: Option<u64>,
-    pub ceo_id: u64,
-    pub creator_id: u64,
+    pub alliance_id: Option<i32>,
+    pub ceo_id: i32,
+    pub creator_id: i32,
     pub date_founded: Option<String>,
     pub description: Option<String>,
-    pub faction_id: Option<u64>,
-    pub home_station_id: Option<u64>,
-    pub member_count: u64,
+    pub faction_id: Option<i32>,
+    pub home_station_id: Option<i32>,
+    pub member_count: i32,
     pub name: String,
     pub shares: Option<u64>,
-    pub tax_rate: f32,
+    pub tax_rate: f64,
     pub ticker: Option<String>,
     pub url: Option<String>,
     pub war_eligible: Option<bool>,
@@ -22,9 +22,9 @@ pub struct CorporationPublicInfo {
 #[derive(Debug, Deserialize)]
 #[allow(missing_docs)]
 pub struct CorporationHistoryItem {
-    pub alliance_id: Option<u64>,
+    pub alliance_id: Option<i32>,
     pub is_deleted: Option<bool>,
-    pub record_id: u64,
+    pub record_id: i32,
     pub start_date: String,
 }
 
@@ -40,7 +40,7 @@ impl<'a> CorporationGroup<'a> {
         "get_corporations_corporation_id",
         RequestType::Public,
         CorporationPublicInfo,
-        (corporation_id: u64) => "{corporation_id}"
+        (corporation_id: i32) => "{corporation_id}"
     );
 
     api_get!(
@@ -49,7 +49,7 @@ impl<'a> CorporationGroup<'a> {
         "get_corporations_corporation_id_alliancehistory",
         RequestType::Public,
         Vec<CorporationHistoryItem>,
-        (corporation_id: u64) => "{corporation_id}"
+        (corporation_id: i32) => "{corporation_id}"
     );
 
     api_get!(
@@ -60,7 +60,7 @@ impl<'a> CorporationGroup<'a> {
         "get_corporations_corporation_id_members",
         RequestType::Authenticated,
         Vec<u64>,
-        (corporation_id: u64) => "{corporation_id}"
+        (corporation_id: i32) => "{corporation_id}"
     );
 
     api_get!(

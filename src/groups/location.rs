@@ -10,7 +10,7 @@ pub struct LocationGroup<'a> {
 pub struct LocationInfo {
     pub solar_system_id: i32,
     pub station_id: Option<i32>,
-    pub structure_id: Option<u64>,
+    pub structure_id: Option<i64>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -25,7 +25,7 @@ pub struct OnlineStatus {
 #[derive(Debug, Deserialize)]
 #[allow(missing_docs)]
 pub struct CurrentShip {
-    pub ship_item_id: u64,
+    pub ship_item_id: i64,
     pub ship_name: String,
     pub ship_type_id: i32,
 }
@@ -37,7 +37,7 @@ impl<'a> LocationGroup<'a> {
         "get_characters_character_id_location",
         RequestType::Authenticated,
         LocationInfo,
-        (character_id: u64) => "{character_id}"
+        (character_id: i32) => "{character_id}"
     );
 
     api_get!(
@@ -46,7 +46,7 @@ impl<'a> LocationGroup<'a> {
         "get_characters_character_id_online",
         RequestType::Authenticated,
         OnlineStatus,
-        (character_id: u64) => "{character_id}"
+        (character_id: i32) => "{character_id}"
     );
 
     api_get!(
@@ -55,6 +55,6 @@ impl<'a> LocationGroup<'a> {
         "get_characters_character_id_ship",
         RequestType::Authenticated,
         CurrentShip,
-        (character_id: u64) => "{character_id}"
+        (character_id: i32) => "{character_id}"
     );
 }

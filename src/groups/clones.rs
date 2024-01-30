@@ -8,16 +8,16 @@ pub struct ClonesGroup<'a> {
 #[derive(Debug, Deserialize)]
 #[allow(missing_docs)]
 pub struct CloneHome {
-    pub location_id: Option<u64>,
+    pub location_id: Option<i64>,
     pub location_type: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
 #[allow(missing_docs)]
 pub struct JumpClone {
-    pub implants: Vec<u32>,
-    pub jump_clone_id: u32,
-    pub location_id: u64,
+    pub implants: Vec<i32>,
+    pub jump_clone_id: i32,
+    pub location_id: i64,
     pub location_type: String,
     pub name: Option<String>,
 }
@@ -37,7 +37,7 @@ impl<'a> ClonesGroup<'a> {
         "get_characters_character_id_clones",
         RequestType::Authenticated,
         Clones,
-        (character_id: u64) => "{character_id}"
+        (character_id: i32) => "{character_id}"
     );
 
     api_get!(
@@ -46,6 +46,6 @@ impl<'a> ClonesGroup<'a> {
         "get_characters_character_id_implants",
         RequestType::Authenticated,
         Vec<u32>,
-        (character_id: u64) => "{character_id}"
+        (character_id: i32) => "{character_id}"
     );
 }
