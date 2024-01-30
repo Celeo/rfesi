@@ -37,7 +37,7 @@ struct AuthenticateResponse {
 #[derive(Debug, Deserialize)]
 struct RefreshTokenAuthenticateResponse {
     access_token: String,
-    expires_in: u16,
+    expires_in: u64,
     refresh_token: String,
 }
 
@@ -93,7 +93,7 @@ pub struct Esi {
     /// The access token from ESI, if set.
     pub access_token: Option<String>,
     /// The millisecond unix timestamp after which the access token expires, if present.
-    pub access_expiration: Option<u128>,
+    pub access_expiration: Option<i64>,
     /// The refresh token from ESI, if set.
     pub refresh_token: Option<String>,
     /// HTTP client
@@ -350,7 +350,7 @@ impl Esi {
         );
         self.access_token = Some(data.access_token);
         // the response's "expires_in" field is seconds but need millis
-        self.access_expiration = Some((data.expires_in as u128 * 1_000) + current_time_millis()?);
+        self.access_expiration = Some((data.expires_in as i64 * 1_000) + current_time_millis()?);
         self.refresh_token = data.refresh_token;
         Ok(claim_data)
     }
@@ -445,7 +445,7 @@ impl Esi {
         let data: RefreshTokenAuthenticateResponse = resp.json().await?;
         self.access_token = Some(data.access_token);
         // the response's "expires_in" field is seconds, need millis
-        self.access_expiration = Some((data.expires_in as u128 * 1_000) + current_time_millis()?);
+        self.access_expiration = Some((data.expires_in as i64 * 1_000) + current_time_millis()?);
         self.refresh_token = Some(data.refresh_token);
         Ok(())
     }
@@ -792,8 +792,12 @@ impl Esi {
 }
 
 /// Get the current system timestamp since the epoch.
-fn current_time_millis() -> Result<u128, EsiError> {
-    Ok(SystemTime::now().duration_since(UNIX_EPOCH)?.as_millis())
+fn current_time_millis() -> Result<i64, EsiError> {
+    Ok(SystemTime::now()
+        .duration_since(UNIX_EPOCH)?
+        .as_millis()
+        .try_into()
+        .expect("i64 overflow for time"))
 }
 
 #[cfg(test)]

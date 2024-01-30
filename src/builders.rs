@@ -73,7 +73,7 @@ pub struct EsiBuilder {
     pub(crate) callback_url: Option<String>,
     pub(crate) scope: Option<String>,
     pub(crate) access_token: Option<String>,
-    pub(crate) access_expiration: Option<u128>,
+    pub(crate) access_expiration: Option<i64>,
     pub(crate) refresh_token: Option<String>,
     pub(crate) user_agent: Option<String>,
     pub(crate) http_timeout: Option<u64>,
@@ -131,7 +131,7 @@ impl EsiBuilder {
     }
 
     /// Set the access_expiration.
-    pub fn access_expiration(mut self, val: Option<u128>) -> Self {
+    pub fn access_expiration(mut self, val: Option<i64>) -> Self {
         self.access_expiration = val;
         self
     }
