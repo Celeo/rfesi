@@ -88,6 +88,10 @@ pub struct Esi {
     pub(crate) client_id: Option<String>,
     pub(crate) client_secret: Option<String>,
     pub(crate) callback_url: Option<String>,
+    pub(crate) base_api_url: String,
+    pub(crate) authorize_url: String,
+    pub(crate) token_url: String,
+    pub(crate) spec_url: String,
     pub(crate) scope: String,
     pub(crate) application_auth: bool,
     /// The access token from ESI, if set.
@@ -107,10 +111,16 @@ impl Esi {
         let client = builder.construct_client()?;
         let version = builder.version.unwrap_or_else(|| "latest".to_owned());
         let e = Esi {
-            version,
+            version: version.clone(),
             client_id: builder.client_id,
             client_secret: builder.client_secret,
             callback_url: builder.callback_url,
+            base_api_url: builder.base_api_url.unwrap_or(BASE_URL.to_string()),
+            authorize_url: builder.authorize_url.unwrap_or(AUTHORIZE_URL.to_string()),
+            token_url: builder.token_url.unwrap_or(TOKEN_URL.to_string()),
+            spec_url: builder
+                .spec_url
+                .unwrap_or(format!("{}{}{}", SPEC_URL_START, version, SPEC_URL_END)),
             scope: builder.scope.unwrap_or_else(|| "".to_owned()),
             application_auth: builder.application_auth.unwrap_or(false),
             access_token: builder.access_token,
@@ -146,14 +156,7 @@ impl Esi {
     /// # }
     pub async fn update_spec(&mut self) -> EsiResult<()> {
         debug!("Updating spec with version {}", self.version);
-        let resp = self
-            .client
-            .get(&format!(
-                "{}{}{}",
-                SPEC_URL_START, self.version, SPEC_URL_END
-            ))
-            .send()
-            .await?;
+        let resp = self.client.get(&self.spec_url).send().await?;
         if !resp.status().is_success() {
             error!("Got status {} when requesting spec", resp.status());
             return Err(EsiError::InvalidStatusCode(resp.status().as_u16()));
@@ -223,7 +226,7 @@ impl Esi {
         let state = "rfesi_unused".to_string();
         let mut url = format!(
             "{}?response_type=code&redirect_uri={}&client_id={}&scope={}&state={}",
-            AUTHORIZE_URL,
+            self.authorize_url,
             self.callback_url.as_ref().unwrap(),
             self.client_id.as_ref().unwrap(),
             self.scope,
@@ -324,7 +327,7 @@ impl Esi {
 
         let resp = self
             .client
-            .post(TOKEN_URL)
+            .post(&self.token_url)
             .headers(self.get_auth_headers()?)
             .form(&body)
             .send()
@@ -430,7 +433,7 @@ impl Esi {
         }
         let resp = self
             .client
-            .post(TOKEN_URL)
+            .post(&self.token_url)
             .headers(self.get_auth_headers()?)
             .form(&body)
             .send()
@@ -516,7 +519,7 @@ impl Esi {
             }
             map
         };
-        let url = format!("{BASE_URL}{endpoint}");
+        let url = format!("{}{endpoint}", self.base_api_url);
         let mut req_builder = self
             .client
             .request(Method::from_str(method)?, &url)

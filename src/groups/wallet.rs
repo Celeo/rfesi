@@ -8,7 +8,6 @@ pub struct WalletGroup<'a> {
 }
 
 impl<'a> WalletGroup<'a> {
-
     api_get!(
         /// Returns a character’s wallet balance
         get_wallet,
@@ -17,5 +16,4 @@ impl<'a> WalletGroup<'a> {
         f64,
         (character_id: i32) => "{character_id}"
     );
-
 }

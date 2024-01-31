@@ -71,6 +71,10 @@ pub struct EsiBuilder {
     pub(crate) client_secret: Option<String>,
     pub(crate) application_auth: Option<bool>,
     pub(crate) callback_url: Option<String>,
+    pub(crate) base_api_url: Option<String>,
+    pub(crate) authorize_url: Option<String>,
+    pub(crate) token_url: Option<String>,
+    pub(crate) spec_url: Option<String>,
     pub(crate) scope: Option<String>,
     pub(crate) access_token: Option<String>,
     pub(crate) access_expiration: Option<i64>,
@@ -115,6 +119,30 @@ impl EsiBuilder {
     /// Set the callback_url.
     pub fn callback_url(mut self, val: &str) -> Self {
         self.callback_url = Some(val.to_owned());
+        self
+    }
+
+    /// Set the base_api_url.
+    pub fn base_api_url(mut self, val: &str) -> Self {
+        self.base_api_url = Some(val.to_owned());
+        self
+    }
+
+    /// Set the authorize_url.
+    pub fn authorize_url(mut self, val: &str) -> Self {
+        self.authorize_url = Some(val.to_owned());
+        self
+    }
+
+    /// Set the token_url.
+    pub fn token_url(mut self, val: &str) -> Self {
+        self.token_url = Some(val.to_owned());
+        self
+    }
+
+    /// Set the spec_url.
+    pub fn spec_url(mut self, val: &str) -> Self {
+        self.spec_url = Some(val.to_owned());
         self
     }
 
@@ -237,9 +265,33 @@ mod tests {
         assert_eq!(b.client_id, None);
         assert_eq!(b.client_secret, None);
         assert_eq!(b.callback_url, None);
+        assert_eq!(b.base_api_url, "https://esi.evetech.net/");
+        assert_eq!(
+            b.authorize_url,
+            "https://login.eveonline.com/v2/oauth/authorize"
+        );
+        assert_eq!(b.token_url, "https://login.eveonline.com/v2/oauth/token");
+        assert_eq!(b.spec_url, "https://esi.evetech.net/_latest/swagger.json");
         assert_eq!(b.version, "latest");
         assert_eq!(b.access_token, None);
         assert_eq!(b.spec, None);
+    }
+
+    #[test]
+    fn test_builder_change_urls() {
+        let b = EsiBuilder::new()
+            .user_agent("d")
+            .base_api_url("http://eve-api/")
+            .authorize_url("http://authorize-url/")
+            .token_url("http://token-url")
+            .spec_url("http://spec-url/")
+            .build()
+            .unwrap();
+
+        assert_eq!(b.base_api_url, "http://eve-api/");
+        assert_eq!(b.authorize_url, "http://authorize-url/");
+        assert_eq!(b.token_url, "http://token-url");
+        assert_eq!(b.spec_url, "http://spec-url/");
     }
 
     #[test]
@@ -274,7 +326,7 @@ mod tests {
 
     #[test]
     fn test_builder_to_json_empty() {
-        let json = r#"{"version":null,"client_id":null,"client_secret":null,"application_auth":null,"callback_url":null,"scope":null,"access_token":null,"access_expiration":null,"refresh_token":null,"user_agent":null,"http_timeout":null,"spec":null}"#;
+        let json = r#"{"version":null,"client_id":null,"client_secret":null,"application_auth":null,"callback_url":null,"base_api_url":null,"authorize_url":null,"token_url":null,"spec_url":null,"scope":null,"access_token":null,"access_expiration":null,"refresh_token":null,"user_agent":null,"http_timeout":null,"spec":null}"#;
         assert_eq!(json, serde_json::to_string(&EsiBuilder::new()).unwrap());
     }
 
