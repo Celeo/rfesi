@@ -66,6 +66,13 @@ pub struct AuthenticationInformation {
     pub pkce_verifier: Option<PkceVerifier>,
 }
 
+/// .
+#[cfg(feature = "return_headers")]
+pub struct ResponseWrapper<T> {
+    data: T,
+    headers: (),
+}
+
 /// Struct to interact with ESI.
 ///
 /// Construct an instance of this struct using [`EsiBuilder`](./struct.EsiBuilder.html).
@@ -283,33 +290,35 @@ impl Esi {
     /// the returned value will be `None`.
     ///
     /// # Example (client secret)
+    ///
     /// ```rust,no_run
     /// # async fn run() {
     /// # use rfesi::prelude::*;
-    /// # let mut esi = EsiBuilder::new()
-    /// #     .user_agent("some user agent")
-    /// #     .client_id("your_client_id")
-    /// #     .client_secret("your_client_secret")
-    /// #     .callback_url("your_callback_url")
-    /// #     .build()
-    /// #     .unwrap();
+    /// let mut esi = EsiBuilder::new()
+    ///     .user_agent("some user agent")
+    ///     .client_id("your_client_id")
+    ///     .client_secret("your_client_secret")
+    ///     .callback_url("your_callback_url")
+    ///     .build()
+    ///     .unwrap();
     /// let claims = esi.authenticate("abcdef...", None).await.unwrap();
     /// # }
     /// ```
     ///
     /// # Example (PKCE/Application authentication)
+    ///
     /// ```rust,no_run
     /// # use rfesi::prelude::*;
-    ///  async fn run() {
-    /// # let mut esi = EsiBuilder::new()
-    /// #     .user_agent("some user agent")
-    /// #     .client_id("your_client_id")
-    /// #     .callback_url("your_callback_url")
-    /// #     .enable_application_authentication(true)
-    /// #     .build()
-    /// #     .unwrap();
-    /// # let auth_infos = esi.get_authorize_url().unwrap();
-    /// # let claims = esi.authenticate("abcdef...", auth_infos.pkce_verifier).await.unwrap();
+    /// # async fn run() {
+    /// let mut esi = EsiBuilder::new()
+    ///     .user_agent("some user agent")
+    ///     .client_id("your_client_id")
+    ///     .callback_url("your_callback_url")
+    ///     .enable_application_authentication(true)
+    ///     .build()
+    ///     .unwrap();
+    /// let auth_infos = esi.get_authorize_url().unwrap();
+    /// let claims = esi.authenticate("abcdef...", auth_infos.pkce_verifier).await.unwrap();
     /// # }
     /// ```
     pub async fn authenticate(
@@ -483,6 +492,7 @@ impl Esi {
     /// let data: ReturnedData = esi.query("GET", RequestType::Public, "abc", None, None).await.unwrap();
     /// # }
     /// ```
+    #[cfg(not(feature = "return_headers"))]
     pub async fn query<T: DeserializeOwned>(
         &self,
         method: &str,
@@ -534,9 +544,21 @@ impl Esi {
         if !resp.status().is_success() {
             return Err(EsiError::InvalidStatusCode(resp.status().as_u16()));
         }
+
+        // TODO process response headers
+        let headers = resp.headers();
+        // X-ESI-Error-Limit-Remain
+        // X-ESI-Error-Limit-Reset
+        // expires
+
         let text = resp.text().await?;
         let data: T = serde_json::from_str(&text)?;
         Ok(data)
+    }
+
+    #[cfg(feature = "return_headers")]
+    pub async fn query<T: DeserializeOwned>() -> EsiResult<ResponseWrapper<T>> {
+        todo!()
     }
 
     /// Resolve an `operationId` to a URL path utilizing the Swagger spec.

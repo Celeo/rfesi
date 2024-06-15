@@ -36,3 +36,4 @@ uuid = { version = "1.5.0", features = ["v4", "fast-rng"] }
 default = ["random_state", "validate_jwt"]
 random_state = []
 validate_jwt = ["dep:jsonwebtoken"]
+return_headers = []
