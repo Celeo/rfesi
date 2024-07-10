@@ -14,12 +14,12 @@ keywords = ["eve", "eve-online", "esi"]
 categories = ["api-bindings"]
 
 [dependencies]
-base64 = "0.21.4"
-http = "0.2.9"
+base64 = "0.22.1"
+http = "1.1.0"
 jsonwebtoken = { version = "9.1.0", optional = true }
 log = "0.4.20"
 rand = "0.8.5"
-reqwest = { version = "0.11.20", features = ["json"] }
+reqwest = { version = "0.12.5", features = ["json"] }
 serde = { version = "1.0.188", features = ["derive"] }
 serde_json = "1.0.107"
 sha2 = "0.10.8"
