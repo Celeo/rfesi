@@ -98,6 +98,9 @@
 #![deny(clippy::all)]
 #![deny(missing_docs)]
 
+#[cfg(all(feature = "default-tls", feature = "rustls-tls"))]
+compile_error!("feature \"default-tls\" and feature \"rustls-tls\" cannot be enabled at the same time");
+
 #[macro_use]
 mod macros;
 

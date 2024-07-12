@@ -33,8 +33,10 @@ chrono = "0.4.31"
 uuid = { version = "1.5.0", features = ["v4", "fast-rng"] }
 
 [features]
-default = ["random_state", "validate_jwt", "reqwest/default-tls"]
+default = ["random_state", "validate_jwt", "default-tls"]
 random_state = []
 validate_jwt = ["dep:jsonwebtoken"]
-rustls = ["reqwest/rustls-tls"]
+default-tls = ["reqwest/default-tls"]
+rustls-tls = ["reqwest/rustls-tls"]
+
 

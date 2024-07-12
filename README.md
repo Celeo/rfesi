@@ -17,7 +17,7 @@ If you don't want or need random SSO state string generation, you can disable th
 
 If you don't want or need SSO token verification, you can disable the "validate_jwt" feature.
 
-if you don't want to use [Rustls](https://crates.io/crates/rustls) instead of OpenSSL to make request, you can enable "rustls" feature.
+if you don't want to use [Rustls](https://crates.io/crates/rustls) instead of OpenSSL to make request, you can enable "rustls-tls" feature, otherwise enable "default-tls" feature.
 
 ## Using
 
