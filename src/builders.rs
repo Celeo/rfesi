@@ -219,9 +219,17 @@ impl EsiBuilder {
             );
             map
         };
+        #[cfg(not(feature = "rustls-tls"))]
         let client = Client::builder()
             .timeout(http_timeout)
             .default_headers(headers)
+            .build()?;
+
+        #[cfg(feature = "rustls-tls")]
+        let client = Client::builder()
+            .timeout(http_timeout)
+            .default_headers(headers)
+            .use_rustls_tls()
             .build()?;
         Ok(client)
     }
