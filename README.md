@@ -13,9 +13,9 @@ Add the latest version to your `Cargo.toml`.
 
 This crate has several features that are enabled by default.
 
-If you don't want or need random SSO state string generation, you can disable the "random_state" feature.
-
-If you don't want or need SSO token verification, you can disable the "validate_jwt" feature.
+- If you don't want or need random SSO state string generation, you can disable the "random_state" feature.
+- If you don't want or need SSO token verification, you can disable the "validate_jwt" feature.
+- If you prefer to use [rustls](https://crates.io/crates/rustls) instead of your system's TLS implementation ([more info here](https://docs.rs/reqwest/latest/reqwest/tls/)) to make requests, you can disable the default features and add the "rustls-tls" feature.
 
 ## Using
 
