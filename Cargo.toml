@@ -38,5 +38,3 @@ random_state = []
 validate_jwt = ["dep:jsonwebtoken"]
 default-tls = ["reqwest/default-tls"]
 rustls-tls = ["reqwest/rustls-tls"]
-
-
