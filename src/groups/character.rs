@@ -60,6 +60,20 @@ pub struct Blueprint {
     pub type_id: i32,
 }
 
+#[derive(Debug, Deserialize)]
+#[allow(missing_docs)]
+pub struct Notification {
+    #[serde(default)]
+    pub is_read: bool,
+    pub notification_id: i64,
+    pub sender_id: i32,
+    pub sender_type: String,
+    pub text: Option<String>,
+    pub timestamp: String,
+    #[serde(rename = "type")]
+    pub notification_type: String,
+}
+
 impl CharacterGroup<'_> {
     api_get!(
         /// Get a character's public information.
@@ -107,5 +121,12 @@ impl CharacterGroup<'_> {
         (character_id: i32) => "{character_id}"
     );
 
-    // more endpoints ...
+    api_get!(
+        /// Get character notifications.
+        get_notifications,
+        "get_characters_character_id_notifications",
+        RequestType::Authenticated,
+        Vec<Notification>,
+        (character_id: i32) => "{character_id}"
+    );
 }
