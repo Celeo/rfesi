@@ -74,6 +74,21 @@ pub struct Notification {
     pub notification_type: String,
 }
 
+#[derive(Debug, Deserialize)]
+#[allow(missing_docs)]
+pub struct WalletTransaction {
+    pub client_id: i32,
+    pub date: String,
+    pub is_buy: bool,
+    pub is_personal: bool,
+    pub journal_ref_id: i64,
+    pub location_id: i64,
+    pub quantity: i32,
+    pub transaction_id: i64,
+    pub type_id: i32,
+    pub unit_price: f64,
+}
+
 impl CharacterGroup<'_> {
     api_get!(
         /// Get a character's public information.
@@ -127,6 +142,15 @@ impl CharacterGroup<'_> {
         "get_characters_character_id_notifications",
         RequestType::Authenticated,
         Vec<Notification>,
+        (character_id: i32) => "{character_id}"
+    );
+
+    api_get!(
+        /// Get character wallet transactions.
+        get_wallet_transactions,
+        "",
+        RequestType::Authenticated,
+        Vec<WalletTransaction>,
         (character_id: i32) => "{character_id}"
     );
 }
