@@ -7,7 +7,7 @@ pub struct SearchGroup<'a> {
     pub(crate) esi: &'a Esi,
 }
 
-impl<'a> SearchGroup<'a> {
+impl SearchGroup<'_> {
     api_get!(
         /// Search for entities that match a given sub-string.
         search,

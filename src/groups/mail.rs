@@ -30,7 +30,7 @@ pub struct MailLabel {
     pub unread_count: Option<i32>,
 }
 
-impl<'a> MailGroup<'a> {
+impl MailGroup<'_> {
     api_get!(
         /// Return a list of the users mail labels, unread counts for each
         /// label and a total unread count.

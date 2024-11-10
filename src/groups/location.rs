@@ -30,7 +30,7 @@ pub struct CurrentShip {
     pub ship_type_id: i32,
 }
 
-impl<'a> LocationGroup<'a> {
+impl LocationGroup<'_> {
     api_get!(
         /// Get the character's location.
         get_location,

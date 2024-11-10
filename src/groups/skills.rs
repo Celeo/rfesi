@@ -22,7 +22,7 @@ pub struct Skills {
     pub unallocated_sp: i32,
 }
 
-impl<'a> SkillsGroup<'a> {
+impl SkillsGroup<'_> {
     api_get!(
         /// Get character skills.
         get_skills,

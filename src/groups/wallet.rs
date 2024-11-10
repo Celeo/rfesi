@@ -7,7 +7,7 @@ pub struct WalletGroup<'a> {
     pub(crate) esi: &'a Esi,
 }
 
-impl<'a> WalletGroup<'a> {
+impl WalletGroup<'_> {
     api_get!(
         /// Returns a character’s wallet balance
         get_wallet,

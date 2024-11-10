@@ -508,14 +508,11 @@ impl Esi {
             // The 'user-agent' and 'content-type' headers are set in the default headers
             // from the builder, so all that's required here is to set the authorization
             // header, if present.
-            match &self.access_token {
-                Some(at) => {
-                    map.insert(
-                        header::AUTHORIZATION,
-                        HeaderValue::from_str(&format!("Bearer {at}"))?,
-                    );
-                }
-                None => (),
+            if let Some(at) = &self.access_token {
+                map.insert(
+                    header::AUTHORIZATION,
+                    HeaderValue::from_str(&format!("Bearer {at}"))?,
+                );
             }
             map
         };

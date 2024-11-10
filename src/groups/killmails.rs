@@ -57,7 +57,7 @@ pub struct Killmail {
     pub victim: KillmailVictim,
 }
 
-impl<'a> KillmailsGroup<'a> {
+impl KillmailsGroup<'_> {
     // NOTE unknown type; I haven't played in a long time
     api_get!(
         /// Get a character's recent kills & losses.

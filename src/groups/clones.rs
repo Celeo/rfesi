@@ -30,7 +30,7 @@ pub struct Clones {
     pub last_clone_jump_date: String,
 }
 
-impl<'a> ClonesGroup<'a> {
+impl ClonesGroup<'_> {
     api_get!(
         /// Get a character's clones.
         get_clones,

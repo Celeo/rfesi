@@ -60,7 +60,7 @@ pub struct Blueprint {
     pub type_id: i32,
 }
 
-impl<'a> CharacterGroup<'a> {
+impl CharacterGroup<'_> {
     api_get!(
         /// Get a character's public information.
         get_public_info,

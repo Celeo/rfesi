@@ -33,7 +33,7 @@ pub struct CorporationGroup<'a> {
     pub(crate) esi: &'a Esi,
 }
 
-impl<'a> CorporationGroup<'a> {
+impl CorporationGroup<'_> {
     api_get!(
         /// Get a corporation's public info.
         get_public_info,

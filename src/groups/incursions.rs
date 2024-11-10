@@ -19,7 +19,7 @@ pub struct Incursion {
     pub incursion_type: String,
 }
 
-impl<'a> IncursionsGroup<'a> {
+impl IncursionsGroup<'_> {
     api_get!(
         /// Get the current incursions.
         list,

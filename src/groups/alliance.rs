@@ -24,7 +24,7 @@ pub struct AllianceIcons {
     pub px64x64: Option<String>,
 }
 
-impl<'a> AllianceGroup<'a> {
+impl AllianceGroup<'_> {
     api_get!(
         /// Get a list of alliance IDs.
         list_ids,

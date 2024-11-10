@@ -107,7 +107,7 @@ pub struct FWWar {
     pub against_id: i32,
 }
 
-impl<'a> FactionWarfareGroup<'a> {
+impl FactionWarfareGroup<'_> {
     api_get!(
         /// Get the top 4 leaderboards of factions for total, last week, and yesterday.
         leaderboards,

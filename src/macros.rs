@@ -9,7 +9,7 @@
 ///     pub(crate) esi: &'a Esi,
 /// }
 ///
-/// impl<'a> SomeGroup<'a> {
+/// impl SomeGroup<'_> {
 ///
 ///     api_get!(
 ///         /// Docs for the generated function
@@ -47,7 +47,7 @@
 ///     pub(crate) esi: &'a Esi,
 /// }
 ///
-/// impl<'a> SomeGroup<'a> {
+/// impl SomeGroup<'_> {
 ///
 ///     api_get!(
 ///         /// Docs for the generated function
@@ -89,7 +89,7 @@
 ///     pub(crate) esi: &'a Esi,
 /// }
 ///
-/// impl<'a> SomeGroup<'a> {
+/// impl SomeGroup<'_> {
 ///
 ///     api_get!(
 ///         /// Docs for the generated function
@@ -210,7 +210,7 @@ macro_rules! api_get {
 ///     pub(crate) esi: &'a Esi,
 /// }
 ///
-/// impl<'a> SomeGroup<'a> {
+/// impl SomeGroup<'_> {
 ///
 ///     api_post!(
 ///         /// Docs for the generated function

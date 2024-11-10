@@ -40,7 +40,7 @@ pub struct AssetName {
     pub name: String,
 }
 
-impl<'a> AssetsGroup<'a> {
+impl AssetsGroup<'_> {
     api_get!(
         /// Get a character's assets.
         get_character_assets,

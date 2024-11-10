@@ -48,7 +48,7 @@ pub struct IndustryJob {
     pub successful_runs: Option<i32>,
 }
 
-impl<'a> IndustryGroup<'a> {
+impl IndustryGroup<'_> {
     api_get!(
         /// Returns a list of solar systems with the cost index for every
         /// activity

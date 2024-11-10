@@ -62,7 +62,7 @@ pub struct MarketGroup<'a> {
     pub(crate) esi: &'a Esi,
 }
 
-impl<'a> MarketGroup<'a> {
+impl MarketGroup<'_> {
     api_get!(
         /// Get a list of historical market statistics for the specified type in a region
         get_region_history,

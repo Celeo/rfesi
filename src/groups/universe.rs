@@ -157,7 +157,7 @@ pub struct Group {
     pub types: Vec<i32>,
 }
 
-impl<'a> UniverseGroup<'a> {
+impl UniverseGroup<'_> {
     api_get!(
         /// Get information on a category
         get_universe_categories_category,
