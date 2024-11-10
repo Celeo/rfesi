@@ -148,7 +148,7 @@ impl CharacterGroup<'_> {
     api_get!(
         /// Get character wallet transactions.
         get_wallet_transactions,
-        "",
+        "get_characters_character_id_wallet_transactions",
         RequestType::Authenticated,
         Vec<WalletTransaction>,
         (character_id: i32) => "{character_id}"
