@@ -19,7 +19,7 @@ impl UserInterfaceGroup<'_> {
             .replace("{character_id}", &character_id.to_string())
             .replace("{type_id}", &type_id.to_string());
         self.esi
-            .query("GET", RequestType::Public, &path, None, None)
+            .query("GET", RequestType::Authenticated, &path, None, None)
             .await
     }
 }
