@@ -120,7 +120,7 @@ impl Esi {
             token_url: builder.token_url.unwrap_or(TOKEN_URL.to_string()),
             spec_url: builder
                 .spec_url
-                .unwrap_or(format!("{}{}{}", SPEC_URL_START, version, SPEC_URL_END)),
+                .unwrap_or(format!("{SPEC_URL_START}{version}{SPEC_URL_END}")),
             scope: builder.scope.unwrap_or_else(|| "".to_owned()),
             application_auth: builder.application_auth.unwrap_or(false),
             access_token: builder.access_token,
