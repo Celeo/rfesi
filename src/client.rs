@@ -1,5 +1,7 @@
 //! Main logic
 
+use crate::pkce::PkceVerifier;
+use crate::{groups::*, pkce, prelude::*};
 use base64::engine::{general_purpose::STANDARD as base64, Engine};
 use log::{debug, error, warn};
 #[cfg(feature = "random_state")]
@@ -15,9 +17,6 @@ use std::{
     str::FromStr,
     time::{SystemTime, UNIX_EPOCH},
 };
-
-use crate::pkce::PkceVerifier;
-use crate::{groups::*, pkce, prelude::*};
 
 const BASE_URL: &str = "https://esi.evetech.net/";
 const AUTHORIZE_URL: &str = "https://login.eveonline.com/v2/oauth/authorize";
