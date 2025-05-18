@@ -316,7 +316,7 @@ impl Esi {
         code: &str,
         pkce_verifier: Option<PkceVerifier>,
     ) -> EsiResult<Option<TokenClaims>> {
-        debug!("Authenticating with code {}", code);
+        debug!("Authenticating with code {code}");
         let mut body = HashMap::from([("grant_type", "authorization_code"), ("code", code)]);
         if self.application_auth {
             let option = self.client_id.as_ref();
@@ -490,10 +490,7 @@ impl Esi {
         query: Option<&[(&str, &str)]>,
         body: Option<&str>,
     ) -> EsiResult<T> {
-        debug!(
-            "Making {:?} {} request to {} with query: {:?}",
-            request_type, method, endpoint, query
-        );
+        debug!("Making {request_type:?} {method} request to {endpoint} with query: {query:?}");
         if request_type == RequestType::Authenticated {
             if self.access_token.is_none() {
                 return Err(EsiError::MissingAuthentication);
