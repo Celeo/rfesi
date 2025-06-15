@@ -1,5 +1,7 @@
 //! Errors
 
+use std::num::ParseIntError;
+use http::header::ToStrError;
 use thiserror::Error;
 
 /// Errors that can occur when dealing with ESI.
@@ -57,6 +59,15 @@ pub enum EsiError {
     /// Error for being unable to get the current timestamp.
     #[error("Could not get current timestamp: {0}")]
     Timestamp(#[from] std::time::SystemTimeError),
+    /// Error for being unable to read response header.
+    #[error("Could not read response header value: {0}")]
+    HeaderReadError(#[from] ToStrError),
+    /// Error for being unable to parse header value.
+    #[error("Could not parse response header - {0}: {1}")]
+    HeaderParseError(String, ParseIntError),
+    /// Error for enforcing ESI error limit
+    #[error("Refusing to process request as we are error limited for {0}ms")]
+    ErrorLimited(i64),
     /// Error for the access token being used after expiring (and therefore
     /// being unable to be used for ESI) and no refresh token being present
     /// to fetch another access token.
