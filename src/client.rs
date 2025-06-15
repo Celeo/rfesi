@@ -17,12 +17,16 @@ use std::{
     str::FromStr,
     time::{SystemTime, UNIX_EPOCH},
 };
+use std::cell::Cell;
+use crate::client::ErrorLimitStatus::{Limited, NotLimited};
 
 const BASE_URL: &str = "https://esi.evetech.net/";
 const AUTHORIZE_URL: &str = "https://login.eveonline.com/v2/oauth/authorize";
 const TOKEN_URL: &str = "https://login.eveonline.com/v2/oauth/token";
 const SPEC_URL_START: &str = "https://esi.evetech.net/_";
 const SPEC_URL_END: &str = "/swagger.json";
+const ERROR_LIMIT_REMAIN_HEADER: &str = "x-esi-error-limit-remain";
+const ERROR_LIMIT_RESET_HEADER: &str = "x-esi-error-limit-reset";
 
 /// Response from SSO when exchanging a SSO code for tokens.
 #[derive(Debug, Deserialize)]
@@ -38,6 +42,18 @@ struct RefreshTokenAuthenticateResponse {
     access_token: String,
     expires_in: u64,
     refresh_token: String,
+}
+
+#[derive(Copy, Clone, Debug)]
+struct ErrorLimitState {
+    remaining_limit: i32,
+    expires_at_millis: i64
+}
+
+#[derive(Copy, Clone, Debug)]
+pub enum ErrorLimitStatus {
+    Limited { for_millis: i64 },
+    NotLimited
 }
 
 /// Which base URL to start with - the public URL for unauthenticated
@@ -102,6 +118,7 @@ pub struct Esi {
     /// HTTP client
     pub(crate) client: Client,
     pub(crate) spec: Option<Value>,
+    error_limit_state: Cell<Option<ErrorLimitState>>
 }
 
 impl Esi {
@@ -127,6 +144,7 @@ impl Esi {
             refresh_token: builder.refresh_token,
             client,
             spec: builder.spec,
+            error_limit_state: Cell::new(None)
         };
         Ok(e)
     }
@@ -155,7 +173,9 @@ impl Esi {
     /// # }
     pub async fn update_spec(&mut self) -> EsiResult<()> {
         debug!("Updating spec with version {}", self.version);
+        self.assert_not_error_limited()?;
         let resp = self.client.get(&self.spec_url).send().await?;
+        self.process_error_limit_headers(resp.headers())?;
         if !resp.status().is_success() {
             error!("Got status {} when requesting spec", resp.status());
             return Err(EsiError::InvalidStatusCode(resp.status().as_u16()));
@@ -317,6 +337,7 @@ impl Esi {
         pkce_verifier: Option<PkceVerifier>,
     ) -> EsiResult<Option<TokenClaims>> {
         debug!("Authenticating with code {code}");
+        self.assert_not_error_limited()?;
         let mut body = HashMap::from([("grant_type", "authorization_code"), ("code", code)]);
         if self.application_auth {
             let option = self.client_id.as_ref();
@@ -338,6 +359,7 @@ impl Esi {
             );
             return Err(EsiError::InvalidStatusCode(resp.status().as_u16()));
         }
+        self.process_error_limit_headers(resp.headers())?;
         let data: AuthenticateResponse = resp.json().await?;
         #[allow(unused_variables)]
         let claim_data: Option<TokenClaims> = None;
@@ -416,6 +438,7 @@ impl Esi {
     /// # }
     /// ```
     pub async fn refresh_access_token(&mut self, refresh_token: Option<&str>) -> EsiResult<()> {
+        self.assert_not_error_limited()?;
         let token = if let Some(token) = refresh_token {
             token.to_string()
         } else if let Some(token) = self.refresh_token.clone() {
@@ -437,6 +460,7 @@ impl Esi {
             .form(&body)
             .send()
             .await?;
+        self.process_error_limit_headers(resp.headers())?;
         if resp.status() != 200 {
             warn!(
                 "Got status {} when making call to authenticate via a refresh token",
@@ -491,6 +515,7 @@ impl Esi {
         body: Option<&str>,
     ) -> EsiResult<T> {
         debug!("Making {request_type:?} {method} request to {endpoint} with query: {query:?}");
+        self.assert_not_error_limited()?;
         if request_type == RequestType::Authenticated {
             if self.access_token.is_none() {
                 return Err(EsiError::MissingAuthentication);
@@ -524,6 +549,7 @@ impl Esi {
         };
         let req = req_builder.build()?;
         let resp = self.client.execute(req).await?;
+        self.process_error_limit_headers(resp.headers())?;
         if !resp.status().is_success() {
             return Err(EsiError::InvalidStatusCode(resp.status().as_u16()));
         }
@@ -617,6 +643,50 @@ impl Esi {
             }
         }
         Err(EsiError::UnknownOperationID(op_id.to_owned()))
+    }
+
+    fn process_error_limit_headers(&self, headers: &HeaderMap) -> Result<(), EsiError> {
+        match (headers.get(ERROR_LIMIT_REMAIN_HEADER), headers.get(ERROR_LIMIT_RESET_HEADER)) {
+            (Some(remain_header), Some(reset_header)) => {
+                let remaining_limit = remain_header.to_str()?.parse::<i32>()
+                    .map_err(|e| EsiError::HeaderParseError(ERROR_LIMIT_REMAIN_HEADER.into(), e))?;
+                let resets_in = reset_header.to_str()?.parse::<i64>()
+                    .map_err(|e| EsiError::HeaderParseError(ERROR_LIMIT_RESET_HEADER.into(), e))?;
+
+                let expires_at_millis = current_time_millis()? + resets_in * 1000;
+
+                self.error_limit_state.set(Some(ErrorLimitState {
+                    remaining_limit,
+                    expires_at_millis,
+                }));
+                Ok(())
+            },
+            _ => Ok(()),
+        }
+    }
+
+    fn assert_not_error_limited(&self) -> Result<(), EsiError> {
+        match self.is_error_limited()? {
+            Limited { for_millis } => {
+                Err(EsiError::ErrorLimited(for_millis))
+            }
+            NotLimited => Ok(())
+        }
+    }
+
+    /// Returns whether we have temporarily encountered the error limit due to too many failed responses.
+    ///
+    /// If this returns true, then this client will refuse to process further requests.
+    pub fn is_error_limited(&self) -> Result<ErrorLimitStatus, EsiError> {
+        match &self.error_limit_state.get() {
+            None => Ok(NotLimited),
+            Some(state) => {
+                if state.remaining_limit > 0 { return Ok(NotLimited) }
+                let remaining_time = state.expires_at_millis - current_time_millis()?;
+                if remaining_time < 0 {return Ok(NotLimited) }
+                Ok(Limited { for_millis: remaining_time })
+            }
+        }
     }
 
     /// Retrieve this struct's OpenAPI specification.
@@ -798,7 +868,12 @@ fn current_time_millis() -> Result<i64, EsiError> {
 
 #[cfg(test)]
 mod tests {
-    use super::AuthenticateResponse;
+    use std::thread;
+    use std::time::Duration;
+    use http::{HeaderMap, HeaderValue};
+    use crate::errors::EsiError;
+    use crate::prelude::EsiBuilder;
+    use super::{AuthenticateResponse, ERROR_LIMIT_REMAIN_HEADER, ERROR_LIMIT_RESET_HEADER};
 
     #[test]
     fn test_authenticateresponse_deserialize() {
@@ -826,5 +901,51 @@ mod tests {
         assert_eq!(data.access_token, "abc");
         assert_eq!(data.expires_in, 1000);
         assert_eq!(data.refresh_token, None);
+    }
+
+    #[test]
+    fn test_error_limit_header_not_limited() {
+        let esi = EsiBuilder::default()
+            .user_agent("Client test, not meant to request")
+            .build()
+            .unwrap();
+        let mut headers = HeaderMap::new();
+        headers.append(ERROR_LIMIT_REMAIN_HEADER, HeaderValue::from_static("100"));
+        headers.append(ERROR_LIMIT_RESET_HEADER, HeaderValue::from_static("5"));
+        esi.process_error_limit_headers(&headers).expect("Should parse");
+        esi.assert_not_error_limited().expect("Should not be error limited");
+    }
+
+    #[test]
+    fn test_error_limit_header_limited() {
+        let esi = EsiBuilder::default()
+            .user_agent("Client test, not meant to request")
+            .build()
+            .unwrap();
+        let mut headers = HeaderMap::new();
+        headers.append(ERROR_LIMIT_REMAIN_HEADER, HeaderValue::from_static("0"));
+        headers.append(ERROR_LIMIT_RESET_HEADER, HeaderValue::from_static("2"));
+        esi.process_error_limit_headers(&headers).expect("Should parse");
+        let err = esi.assert_not_error_limited().expect_err("Should be limited");
+        match err {
+            EsiError::ErrorLimited(millis) => { assert!(millis <= 2000) },
+            _ => panic!("Unexpected error: {}", err),
+        }
+    }
+
+    #[test]
+    #[ignore] // This is a bit slow
+    fn test_error_limit_expired_limit() {
+        let esi = EsiBuilder::default()
+            .user_agent("Client test, not meant to request")
+            .build()
+            .unwrap();
+        let mut headers = HeaderMap::new();
+        headers.append(ERROR_LIMIT_REMAIN_HEADER, HeaderValue::from_static("0"));
+        headers.append(ERROR_LIMIT_RESET_HEADER, HeaderValue::from_static("2"));
+        esi.process_error_limit_headers(&headers).expect("Should parse");
+        println!("Waiting 2 seconds ..");
+        thread::sleep(Duration::from_millis(2050));
+        esi.assert_not_error_limited().expect("Should not be error limited");
     }
 }
