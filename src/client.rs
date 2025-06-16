@@ -1,5 +1,6 @@
 //! Main logic
 
+use crate::client::ErrorLimitStatus::{Limited, NotLimited};
 use crate::pkce::PkceVerifier;
 use crate::{groups::*, pkce, prelude::*};
 use base64::engine::{general_purpose::STANDARD as base64, Engine};
@@ -12,13 +13,12 @@ use reqwest::{
 };
 use serde::de::DeserializeOwned;
 use serde_json::Value;
+use std::cell::Cell;
 use std::{
     collections::HashMap,
     str::FromStr,
     time::{SystemTime, UNIX_EPOCH},
 };
-use std::cell::Cell;
-use crate::client::ErrorLimitStatus::{Limited, NotLimited};
 
 const BASE_URL: &str = "https://esi.evetech.net/";
 const AUTHORIZE_URL: &str = "https://login.eveonline.com/v2/oauth/authorize";
@@ -47,13 +47,13 @@ struct RefreshTokenAuthenticateResponse {
 #[derive(Copy, Clone, Debug)]
 struct ErrorLimitState {
     remaining_limit: i32,
-    expires_at_millis: i64
+    expires_at_millis: i64,
 }
 
 #[derive(Copy, Clone, Debug)]
 pub enum ErrorLimitStatus {
     Limited { for_millis: i64 },
-    NotLimited
+    NotLimited,
 }
 
 /// Which base URL to start with - the public URL for unauthenticated
@@ -118,7 +118,7 @@ pub struct Esi {
     /// HTTP client
     pub(crate) client: Client,
     pub(crate) spec: Option<Value>,
-    error_limit_state: Cell<Option<ErrorLimitState>>
+    error_limit_state: Cell<Option<ErrorLimitState>>,
 }
 
 impl Esi {
@@ -144,7 +144,7 @@ impl Esi {
             refresh_token: builder.refresh_token,
             client,
             spec: builder.spec,
-            error_limit_state: Cell::new(None)
+            error_limit_state: Cell::new(None),
         };
         Ok(e)
     }
@@ -646,11 +646,18 @@ impl Esi {
     }
 
     fn process_error_limit_headers(&self, headers: &HeaderMap) -> Result<(), EsiError> {
-        match (headers.get(ERROR_LIMIT_REMAIN_HEADER), headers.get(ERROR_LIMIT_RESET_HEADER)) {
+        match (
+            headers.get(ERROR_LIMIT_REMAIN_HEADER),
+            headers.get(ERROR_LIMIT_RESET_HEADER),
+        ) {
             (Some(remain_header), Some(reset_header)) => {
-                let remaining_limit = remain_header.to_str()?.parse::<i32>()
+                let remaining_limit = remain_header
+                    .to_str()?
+                    .parse::<i32>()
                     .map_err(|e| EsiError::HeaderParseError(ERROR_LIMIT_REMAIN_HEADER.into(), e))?;
-                let resets_in = reset_header.to_str()?.parse::<i64>()
+                let resets_in = reset_header
+                    .to_str()?
+                    .parse::<i64>()
                     .map_err(|e| EsiError::HeaderParseError(ERROR_LIMIT_RESET_HEADER.into(), e))?;
 
                 let expires_at_millis = current_time_millis()? + resets_in * 1000;
@@ -660,17 +667,15 @@ impl Esi {
                     expires_at_millis,
                 }));
                 Ok(())
-            },
+            }
             _ => Ok(()),
         }
     }
 
     fn assert_not_error_limited(&self) -> Result<(), EsiError> {
         match self.is_error_limited()? {
-            Limited { for_millis } => {
-                Err(EsiError::ErrorLimited(for_millis))
-            }
-            NotLimited => Ok(())
+            Limited { for_millis } => Err(EsiError::ErrorLimited(for_millis)),
+            NotLimited => Ok(()),
         }
     }
 
@@ -681,10 +686,16 @@ impl Esi {
         match &self.error_limit_state.get() {
             None => Ok(NotLimited),
             Some(state) => {
-                if state.remaining_limit > 0 { return Ok(NotLimited) }
+                if state.remaining_limit > 0 {
+                    return Ok(NotLimited);
+                }
                 let remaining_time = state.expires_at_millis - current_time_millis()?;
-                if remaining_time < 0 {return Ok(NotLimited) }
-                Ok(Limited { for_millis: remaining_time })
+                if remaining_time < 0 {
+                    return Ok(NotLimited);
+                }
+                Ok(Limited {
+                    for_millis: remaining_time,
+                })
             }
         }
     }
@@ -697,162 +708,162 @@ impl Esi {
     }
 
     /// Call endpoints under the "alliance" group in ESI.
-    pub fn group_alliance(&self) -> AllianceGroup {
+    pub fn group_alliance(&self) -> AllianceGroup<'_> {
         AllianceGroup { esi: self }
     }
 
     /// Call endpoints under the "Assets" group in ESI.
-    pub fn group_assets(&self) -> AssetsGroup {
+    pub fn group_assets(&self) -> AssetsGroup<'_> {
         AssetsGroup { esi: self }
     }
 
     /// Call endpoints under the "Bookmarks" group in ESI.
-    pub fn group_bookmarks(&self) -> BookmarksGroup {
+    pub fn group_bookmarks(&self) -> BookmarksGroup<'_> {
         BookmarksGroup { esi: self }
     }
 
     /// Call endpoints under the "Calendar" group in ESI.
-    pub fn group_calendar(&self) -> CalendarGroup {
+    pub fn group_calendar(&self) -> CalendarGroup<'_> {
         CalendarGroup { esi: self }
     }
 
     /// Call endpoints under the "Character" group in ESI.
-    pub fn group_character(&self) -> CharacterGroup {
+    pub fn group_character(&self) -> CharacterGroup<'_> {
         CharacterGroup { esi: self }
     }
 
     /// Call endpoints under the "Clones" group in ESI.
-    pub fn group_clones(&self) -> ClonesGroup {
+    pub fn group_clones(&self) -> ClonesGroup<'_> {
         ClonesGroup { esi: self }
     }
 
     /// Call endpoints under the "Contacts" group in ESI.
-    pub fn group_contacts(&self) -> ContactsGroup {
+    pub fn group_contacts(&self) -> ContactsGroup<'_> {
         ContactsGroup { esi: self }
     }
 
     /// Call endpoints under the "Contracts" group in ESI.
-    pub fn group_contracts(&self) -> ContractsGroup {
+    pub fn group_contracts(&self) -> ContractsGroup<'_> {
         ContractsGroup { esi: self }
     }
 
     /// Call endpoints under the "Corporation" group in ESI.
-    pub fn group_corporation(&self) -> CorporationGroup {
+    pub fn group_corporation(&self) -> CorporationGroup<'_> {
         CorporationGroup { esi: self }
     }
 
     /// Call endpoints under the "Dogma" group in ESI.
-    pub fn group_dogma(&self) -> DogmaGroup {
+    pub fn group_dogma(&self) -> DogmaGroup<'_> {
         DogmaGroup { esi: self }
     }
 
     /// Call endpoints under the "FactionWarfare" group in ESI.
-    pub fn group_faction_warfare(&self) -> FactionWarfareGroup {
+    pub fn group_faction_warfare(&self) -> FactionWarfareGroup<'_> {
         FactionWarfareGroup { esi: self }
     }
 
     /// Call endpoints under the "Fittings" group in ESI.
-    pub fn group_fittings(&self) -> FittingsGroup {
+    pub fn group_fittings(&self) -> FittingsGroup<'_> {
         FittingsGroup { esi: self }
     }
 
     /// Call endpoints under the "Fleets" group in ESI.
-    pub fn group_fleets(&self) -> FleetsGroup {
+    pub fn group_fleets(&self) -> FleetsGroup<'_> {
         FleetsGroup { esi: self }
     }
 
     /// Call endpoints under the "Incursions" group in ESI.
-    pub fn group_incursions(&self) -> IncursionsGroup {
+    pub fn group_incursions(&self) -> IncursionsGroup<'_> {
         IncursionsGroup { esi: self }
     }
 
     /// Call endpoints under the "Industry" group in ESI.
-    pub fn group_industry(&self) -> IndustryGroup {
+    pub fn group_industry(&self) -> IndustryGroup<'_> {
         IndustryGroup { esi: self }
     }
 
     /// Call endpoints under the "Insurance" group in ESI.
-    pub fn group_insurance(&self) -> InsuranceGroup {
+    pub fn group_insurance(&self) -> InsuranceGroup<'_> {
         InsuranceGroup { esi: self }
     }
 
     /// Call endpoints under the "Killmails" group in ESI.
-    pub fn group_killmails(&self) -> KillmailsGroup {
+    pub fn group_killmails(&self) -> KillmailsGroup<'_> {
         KillmailsGroup { esi: self }
     }
 
     /// Call endpoints under the "Location" group in ESI.
-    pub fn group_location(&self) -> LocationGroup {
+    pub fn group_location(&self) -> LocationGroup<'_> {
         LocationGroup { esi: self }
     }
 
     /// Call endpoints under the "Loyalty" group in ESI.
-    pub fn group_loyalty(&self) -> LoyaltyGroup {
+    pub fn group_loyalty(&self) -> LoyaltyGroup<'_> {
         LoyaltyGroup { esi: self }
     }
 
     /// Call endpoints under the "Mail" group in ESI.
-    pub fn group_mail(&self) -> MailGroup {
+    pub fn group_mail(&self) -> MailGroup<'_> {
         MailGroup { esi: self }
     }
 
     /// Call endpoints under the "Market" group in ESI.
-    pub fn group_market(&self) -> MarketGroup {
+    pub fn group_market(&self) -> MarketGroup<'_> {
         MarketGroup { esi: self }
     }
 
     /// Call endpoints under the "Opportunities" group in ESI.
-    pub fn group_opportunities(&self) -> OpportunitiesGroup {
+    pub fn group_opportunities(&self) -> OpportunitiesGroup<'_> {
         OpportunitiesGroup { esi: self }
     }
 
     /// Call endpoints under the "PlanetaryInteraction" group in ESI.
-    pub fn group_planetary_interaction(&self) -> PlanetaryInteractionGroup {
+    pub fn group_planetary_interaction(&self) -> PlanetaryInteractionGroup<'_> {
         PlanetaryInteractionGroup { esi: self }
     }
 
     /// Call endpoints under the "Routes" group in ESI.
-    pub fn group_routes(&self) -> RoutesGroup {
+    pub fn group_routes(&self) -> RoutesGroup<'_> {
         RoutesGroup { esi: self }
     }
 
     /// Call endpoints under the "Search" group in ESI.
-    pub fn group_search(&self) -> SearchGroup {
+    pub fn group_search(&self) -> SearchGroup<'_> {
         SearchGroup { esi: self }
     }
 
     /// Call endpoints under the "Skills" group in ESI.
-    pub fn group_skills(&self) -> SkillsGroup {
+    pub fn group_skills(&self) -> SkillsGroup<'_> {
         SkillsGroup { esi: self }
     }
 
     /// Call endpoints under the "Sovereignty" group in ESI.
-    pub fn group_sovereignty(&self) -> SovereigntyGroup {
+    pub fn group_sovereignty(&self) -> SovereigntyGroup<'_> {
         SovereigntyGroup { esi: self }
     }
 
     /// Call endpoints under the "Status" group in ESI.
-    pub fn group_status(&self) -> StatusGroup {
+    pub fn group_status(&self) -> StatusGroup<'_> {
         StatusGroup { esi: self }
     }
 
     /// Call endpoints under the "Universe" group in ESI.
-    pub fn group_universe(&self) -> UniverseGroup {
+    pub fn group_universe(&self) -> UniverseGroup<'_> {
         UniverseGroup { esi: self }
     }
 
     /// Call endpoints under the "UserInterface" group in ESI.
-    pub fn group_user_interface(&self) -> UserInterfaceGroup {
+    pub fn group_user_interface(&self) -> UserInterfaceGroup<'_> {
         UserInterfaceGroup { esi: self }
     }
 
     /// Call endpoints under the "Wallet" group in ESI.
-    pub fn group_wallet(&self) -> WalletGroup {
+    pub fn group_wallet(&self) -> WalletGroup<'_> {
         WalletGroup { esi: self }
     }
 
     /// Call endpoints under the "Wars" group in ESI.
-    pub fn group_wars(&self) -> WarsGroup {
+    pub fn group_wars(&self) -> WarsGroup<'_> {
         WarsGroup { esi: self }
     }
 }
@@ -868,12 +879,12 @@ fn current_time_millis() -> Result<i64, EsiError> {
 
 #[cfg(test)]
 mod tests {
-    use std::thread;
-    use std::time::Duration;
-    use http::{HeaderMap, HeaderValue};
+    use super::{AuthenticateResponse, ERROR_LIMIT_REMAIN_HEADER, ERROR_LIMIT_RESET_HEADER};
     use crate::errors::EsiError;
     use crate::prelude::EsiBuilder;
-    use super::{AuthenticateResponse, ERROR_LIMIT_REMAIN_HEADER, ERROR_LIMIT_RESET_HEADER};
+    use http::{HeaderMap, HeaderValue};
+    use std::thread;
+    use std::time::Duration;
 
     #[test]
     fn test_authenticateresponse_deserialize() {
@@ -912,8 +923,10 @@ mod tests {
         let mut headers = HeaderMap::new();
         headers.append(ERROR_LIMIT_REMAIN_HEADER, HeaderValue::from_static("100"));
         headers.append(ERROR_LIMIT_RESET_HEADER, HeaderValue::from_static("5"));
-        esi.process_error_limit_headers(&headers).expect("Should parse");
-        esi.assert_not_error_limited().expect("Should not be error limited");
+        esi.process_error_limit_headers(&headers)
+            .expect("Should parse");
+        esi.assert_not_error_limited()
+            .expect("Should not be error limited");
     }
 
     #[test]
@@ -925,10 +938,15 @@ mod tests {
         let mut headers = HeaderMap::new();
         headers.append(ERROR_LIMIT_REMAIN_HEADER, HeaderValue::from_static("0"));
         headers.append(ERROR_LIMIT_RESET_HEADER, HeaderValue::from_static("2"));
-        esi.process_error_limit_headers(&headers).expect("Should parse");
-        let err = esi.assert_not_error_limited().expect_err("Should be limited");
+        esi.process_error_limit_headers(&headers)
+            .expect("Should parse");
+        let err = esi
+            .assert_not_error_limited()
+            .expect_err("Should be limited");
         match err {
-            EsiError::ErrorLimited(millis) => { assert!(millis <= 2000) },
+            EsiError::ErrorLimited(millis) => {
+                assert!(millis <= 2000)
+            }
             _ => panic!("Unexpected error: {}", err),
         }
     }
@@ -943,9 +961,11 @@ mod tests {
         let mut headers = HeaderMap::new();
         headers.append(ERROR_LIMIT_REMAIN_HEADER, HeaderValue::from_static("0"));
         headers.append(ERROR_LIMIT_RESET_HEADER, HeaderValue::from_static("2"));
-        esi.process_error_limit_headers(&headers).expect("Should parse");
+        esi.process_error_limit_headers(&headers)
+            .expect("Should parse");
         println!("Waiting 2 seconds ..");
         thread::sleep(Duration::from_millis(2050));
-        esi.assert_not_error_limited().expect("Should not be error limited");
+        esi.assert_not_error_limited()
+            .expect("Should not be error limited");
     }
 }

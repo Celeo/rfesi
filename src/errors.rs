@@ -1,7 +1,7 @@
 //! Errors
 
-use std::num::ParseIntError;
 use http::header::ToStrError;
+use std::num::ParseIntError;
 use thiserror::Error;
 
 /// Errors that can occur when dealing with ESI.
