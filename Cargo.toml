@@ -24,6 +24,7 @@ serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 sha2 = "0.10.9"
 thiserror = "1.0.69"
+tokio = "1"
 
 [dev-dependencies]
 pretty_env_logger = "0.5.0"
