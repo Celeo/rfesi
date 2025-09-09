@@ -30,7 +30,7 @@
 /// pub async fn function_name(&self) -> EsiResult<Vec<u64>> {
 ///     let path = self.esi.get_endpoint_for_op_id("some_operation_id")?;
 ///     self.esi
-///         .query("GET", RequestType::Public, &path, None, None)
+///         .query("GET", RequestType::Public, &path, None, None, None)
 ///         .await
 /// }
 /// ```
@@ -69,7 +69,7 @@
 ///     let path = self.esi.get_endpoint_for_op_id("some_operation_id")?
 ///         .replace("{alliance_id}", &alliance_id.to_string());
 ///     self.esi
-///         .query("GET", RequestType::Public, &path, None, None)
+///         .query("GET", RequestType::Public, &path, None, None, None)
 ///         .await
 /// }
 /// ```
@@ -144,7 +144,7 @@ macro_rules! api_get {
                     .replace($replace, &$param.to_string())
                 )*;
             self.esi.
-                query("GET", $visibility, &path, None, None)
+                query("GET", $visibility, &path, None, None, None)
                 .await
         }
     };
@@ -186,7 +186,7 @@ macro_rules! api_get {
             )?
             let params: Vec<(&str, &str)> = params.iter().map(|(a, b)| (*a, &**b)).collect();
             self.esi.
-                query("GET", $visibility, &path, Some(&params), None)
+                query("GET", $visibility, &path, Some(&params), None, None)
                 .await
         }
     };
@@ -234,7 +234,7 @@ macro_rules! api_get {
 ///         .replace("{alliance_id}", &alliance_id.to_string());
 ///     let body = serde_json::to_string(ids);
 ///     self.esi
-///         .query("GET", RequestType::Public, &path, None, Some(&body))
+///         .query("GET", RequestType::Public, &path, None, Some(&body), None)
 ///         .await
 /// }
 /// ```
@@ -259,7 +259,7 @@ macro_rules! api_post {
                 )*;
             let body = serde_json::to_string($body_param)?;
             self.esi.
-                query("POST", $visibility, &path, None, Some(&body))
+                query("POST", $visibility, &path, None, Some(&body), None)
                 .await
         }
     }

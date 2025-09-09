@@ -8,7 +8,7 @@ use log::{debug, error, warn};
 #[cfg(feature = "random_state")]
 use rand::{distributions::Alphanumeric, Rng};
 use reqwest::{
-    header::{self, HeaderMap, HeaderValue},
+    header::{self, HeaderMap, HeaderName, HeaderValue},
     Client, Method,
 };
 use serde::de::DeserializeOwned;
@@ -504,7 +504,7 @@ impl Esi {
     /// #     .unwrap();
     /// #[derive(Deserialize)]
     /// struct ReturnedData {}
-    /// let data: ReturnedData = esi.query("GET", RequestType::Public, "abc", None, None).await.unwrap();
+    /// let data: ReturnedData = esi.query("GET", RequestType::Public, "abc", None, None, None).await.unwrap();
     /// # }
     /// ```
     pub async fn query<T: DeserializeOwned>(
@@ -514,6 +514,7 @@ impl Esi {
         endpoint: &str,
         query: Option<&[(&str, &str)]>,
         body: Option<&str>,
+        extra_headers: Option<HashMap<&str, String>>,
     ) -> EsiResult<T> {
         debug!("Making {request_type:?} {method} request to {endpoint} with query: {query:?}");
         self.assert_not_error_limited().await?;
@@ -529,13 +530,18 @@ impl Esi {
             let mut map = HeaderMap::new();
             // The 'user-agent' and 'content-type' headers are set in the default headers
             // from the builder, so all that's required here is to set the authorization
-            // header, if present.
+            // header, if present, and add in any additional endpoint-specific headers.
             if request_type == RequestType::Authenticated {
                 if let Some(at) = &self.access_token {
                     map.insert(
                         header::AUTHORIZATION,
                         HeaderValue::from_str(&format!("Bearer {at}"))?,
                     );
+                }
+            }
+            if let Some(extra_headers) = extra_headers {
+                for (key, value) in extra_headers {
+                    map.insert(HeaderName::from_str(key)?, HeaderValue::from_str(&value)?);
                 }
             }
             map

@@ -37,6 +37,9 @@ pub enum EsiError {
     /// Error for if the provided user-agent header value has invalid characters.
     #[error("Invalid HTTP header value")]
     InvalidUserAgentHeader(#[from] http::header::InvalidHeaderValue),
+    /// Error for if the provided user-agent header name has invalid characters.
+    #[error("Invalid HTTP header name")]
+    InvalidHeaderName(#[from] http::header::InvalidHeaderName),
     /// Error for if the underlying `reqwest::Client` could not be constructed.
     #[error("Error constructing HTTP client")]
     ReqwestError(#[from] reqwest::Error),
