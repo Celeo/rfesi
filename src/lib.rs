@@ -114,3 +114,4 @@ pub mod groups;
 mod jwt_util;
 mod pkce;
 pub mod prelude;
+mod spec;

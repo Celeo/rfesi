@@ -1,8 +1,12 @@
 //! Main logic
 
-use crate::client::ErrorLimitStatus::{Limited, NotLimited};
-use crate::pkce::PkceVerifier;
-use crate::{groups::*, pkce, prelude::*};
+use crate::{
+    client::ErrorLimitStatus::{Limited, NotLimited},
+    groups::*,
+    pkce::{self, PkceVerifier},
+    prelude::*,
+    spec::Spec,
+};
 use base64::engine::{general_purpose::STANDARD as base64, Engine};
 use log::{debug, error, warn};
 #[cfg(feature = "random_state")]
@@ -12,11 +16,10 @@ use reqwest::{
     Client, Method,
 };
 use serde::de::DeserializeOwned;
-use serde_json::Value;
-use std::sync::Arc;
 use std::{
     collections::HashMap,
     str::FromStr,
+    sync::Arc,
     time::{SystemTime, UNIX_EPOCH},
 };
 use tokio::sync::RwLock;
@@ -24,10 +27,14 @@ use tokio::sync::RwLock;
 const BASE_URL: &str = "https://esi.evetech.net/";
 const AUTHORIZE_URL: &str = "https://login.eveonline.com/v2/oauth/authorize";
 const TOKEN_URL: &str = "https://login.eveonline.com/v2/oauth/token";
-const SPEC_URL_START: &str = "https://esi.evetech.net/_";
-const SPEC_URL_END: &str = "/swagger.json";
+const SPEC_URL: &str = "https://esi.evetech.net/latest/swagger.json";
 const ERROR_LIMIT_REMAIN_HEADER: &str = "x-esi-error-limit-remain";
 const ERROR_LIMIT_RESET_HEADER: &str = "x-esi-error-limit-reset";
+
+static COMPATIBILITY_HEADER: &str = "X-Compatibility-Date";
+/// The deafult compatibility date to use if none is specified
+/// in the builder.
+const COMPATIBILITY_DATE_DEFAULT: &str = "2025-08-26";
 
 /// Response from SSO when exchanging a SSO code for tokens.
 #[derive(Debug, Deserialize)]
@@ -100,7 +107,7 @@ pub struct AuthenticationInformation {
 /// ```
 #[derive(Clone, Debug)]
 pub struct Esi {
-    pub(crate) version: String,
+    pub(crate) compatibility_date: String,
     pub(crate) client_id: Option<String>,
     pub(crate) client_secret: Option<String>,
     pub(crate) callback_url: Option<String>,
@@ -118,7 +125,7 @@ pub struct Esi {
     pub refresh_token: Option<String>,
     /// HTTP client
     pub(crate) client: Client,
-    pub(crate) spec: Option<Value>,
+    pub(crate) spec: Option<Spec>,
     error_limit_state: Arc<RwLock<Option<ErrorLimitState>>>,
 }
 
@@ -126,18 +133,18 @@ impl Esi {
     /// Consume the builder, creating an instance of this struct.
     pub(crate) fn from_builder(builder: EsiBuilder) -> EsiResult<Self> {
         let client = builder.construct_client()?;
-        let version = builder.version.unwrap_or_else(|| "latest".to_owned());
+        let compatibility_date = builder
+            .compatibility_date
+            .unwrap_or_else(|| COMPATIBILITY_DATE_DEFAULT.to_owned());
         let e = Esi {
-            version: version.clone(),
+            compatibility_date: compatibility_date.clone(),
             client_id: builder.client_id,
             client_secret: builder.client_secret,
             callback_url: builder.callback_url,
             base_api_url: builder.base_api_url.unwrap_or(BASE_URL.to_string()),
             authorize_url: builder.authorize_url.unwrap_or(AUTHORIZE_URL.to_string()),
             token_url: builder.token_url.unwrap_or(TOKEN_URL.to_string()),
-            spec_url: builder
-                .spec_url
-                .unwrap_or(format!("{SPEC_URL_START}{version}{SPEC_URL_END}")),
+            spec_url: builder.spec_url.unwrap_or(SPEC_URL.to_string()),
             scope: builder.scope.unwrap_or_else(|| "".to_owned()),
             application_auth: builder.application_auth.unwrap_or(false),
             access_token: builder.access_token,
@@ -173,15 +180,19 @@ impl Esi {
     /// esi.update_spec().await.unwrap();
     /// # }
     pub async fn update_spec(&mut self) -> EsiResult<()> {
-        debug!("Updating spec with version {}", self.version);
+        debug!(
+            "Updating spec with compatibility date {}",
+            self.compatibility_date
+        );
         self.assert_not_error_limited().await?;
+        dbg!(&self.spec_url); // FIXME
         let resp = self.client.get(&self.spec_url).send().await?;
         self.process_error_limit_headers(resp.headers()).await?;
         if !resp.status().is_success() {
             error!("Got status {} when requesting spec", resp.status());
             return Err(EsiError::InvalidStatusCode(resp.status().as_u16()));
         }
-        let data: Value = resp.json().await?;
+        let data = resp.json().await?;
         self.spec = Some(data);
         Ok(())
     }
@@ -529,7 +540,7 @@ impl Esi {
             let mut map = HeaderMap::new();
             // The 'user-agent' and 'content-type' headers are set in the default headers
             // from the builder, so all that's required here is to set the authorization
-            // header, if present.
+            // header, if present, and the compatibility date.
             if request_type == RequestType::Authenticated {
                 if let Some(at) = &self.access_token {
                     map.insert(
@@ -538,6 +549,10 @@ impl Esi {
                     );
                 }
             }
+            map.insert(
+                COMPATIBILITY_HEADER,
+                HeaderValue::from_str(&self.compatibility_date)?,
+            );
             map
         };
         let url = format!("{}{endpoint}", self.base_api_url);
@@ -627,19 +642,10 @@ impl Esi {
             .spec
             .as_ref()
             .ok_or_else(|| EsiError::FailedSpecParse("Unwrapping JSON Value".to_owned()))?;
-        let paths = data["paths"]
-            .as_object()
-            .ok_or_else(|| EsiError::FailedSpecParse("Getting paths".to_owned()))?;
-        for (path_str, path_obj) in paths.iter() {
-            let path = path_obj
-                .as_object()
-                .ok_or_else(|| EsiError::FailedSpecParse("Parsing a path".to_owned()))?;
-            for method in path.values() {
-                let operation_id = match method["operationId"].as_str() {
-                    Some(o) => o,
-                    None => continue,
-                };
-                if operation_id == op_id {
+        for (path_str, path_obj) in data.paths.iter() {
+            for method in path_obj.values() {
+                dbg!(&method.operation_id);
+                if method.operation_id == op_id {
                     // the paths contain a leading slash, so strip it
                     return Ok(path_str.chars().skip(1).collect());
                 }
@@ -709,7 +715,7 @@ impl Esi {
     /// Retrieve this struct's OpenAPI specification.
     ///
     /// Use in tandem with [EsiBuilder::spec].
-    pub fn get_spec(&self) -> Option<&Value> {
+    pub fn get_spec(&self) -> Option<&Spec> {
         self.spec.as_ref()
     }
 

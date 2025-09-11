@@ -1,8 +1,7 @@
 //! Builders
 
-use crate::prelude::*;
+use crate::{prelude::*, spec::Spec};
 use reqwest::{header, Client};
-use serde_json::Value;
 use std::time::Duration;
 
 /// Builder for the `Esi` struct.
@@ -31,7 +30,7 @@ use std::time::Duration;
 ///
 /// ```rust
 /// # use rfesi::prelude::EsiBuilder;
-/// # let your_spec = serde_json::json!({});
+/// # let your_spec = serde_json::from_str(r#"{"paths": {}}"#).unwrap();
 /// let mut esi = EsiBuilder::new()
 ///     .user_agent("some user agent")
 ///     .spec(Some(your_spec))
@@ -66,7 +65,7 @@ use std::time::Duration;
 /// API usage behavior.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, PartialEq, Eq)]
 pub struct EsiBuilder {
-    pub(crate) version: Option<String>,
+    pub(crate) compatibility_date: Option<String>,
     pub(crate) client_id: Option<String>,
     pub(crate) client_secret: Option<String>,
     pub(crate) application_auth: Option<bool>,
@@ -81,7 +80,7 @@ pub struct EsiBuilder {
     pub(crate) refresh_token: Option<String>,
     pub(crate) user_agent: Option<String>,
     pub(crate) http_timeout: Option<u64>,
-    pub(crate) spec: Option<Value>,
+    pub(crate) spec: Option<Spec>,
 }
 
 impl EsiBuilder {
@@ -90,11 +89,11 @@ impl EsiBuilder {
         Default::default()
     }
 
-    /// Set the version of ESI to use.
+    /// Set the compatibility header to use.
     ///
-    /// Will default to `"latest"` if not set.
-    pub fn version(mut self, val: &str) -> Self {
-        self.version = Some(val.to_owned());
+    /// Will default to a hardcoded value if not set.
+    pub fn compatibility_date(mut self, val: &str) -> Self {
+        self.compatibility_date = Some(val.to_owned());
         self
     }
 
@@ -192,7 +191,7 @@ impl EsiBuilder {
     /// of retrieving the spec.
     ///
     /// Be aware of the potential for out-of-date data.
-    pub fn spec(mut self, spec: Option<Value>) -> Self {
+    pub fn spec(mut self, spec: Option<Spec>) -> Self {
         self.spec = spec;
         self
     }
@@ -247,6 +246,7 @@ impl EsiBuilder {
 #[cfg(test)]
 mod tests {
     use super::EsiBuilder;
+    use crate::spec::Spec;
 
     #[test]
     fn test_builder_valid() {
@@ -261,7 +261,7 @@ mod tests {
         assert_eq!(b.client_id, Some(String::from("a")));
         assert_eq!(b.client_secret, Some(String::from("b")));
         assert_eq!(b.callback_url, Some(String::from("c")));
-        assert_eq!(b.version, "latest");
+        assert_eq!(b.compatibility_date, "2025-08-26");
         assert_eq!(b.access_token, None);
         assert_eq!(b.spec, None);
     }
@@ -279,8 +279,8 @@ mod tests {
             "https://login.eveonline.com/v2/oauth/authorize"
         );
         assert_eq!(b.token_url, "https://login.eveonline.com/v2/oauth/token");
-        assert_eq!(b.spec_url, "https://esi.evetech.net/_latest/swagger.json");
-        assert_eq!(b.version, "latest");
+        assert_eq!(b.spec_url, "https://esi.evetech.net/latest/swagger.json");
+        assert_eq!(b.compatibility_date, "2025-08-26");
         assert_eq!(b.access_token, None);
         assert_eq!(b.spec, None);
     }
@@ -312,17 +312,7 @@ mod tests {
 
     #[test]
     fn test_builder_with_spec() {
-        let spec = serde_json::json!({
-            "consumes": ["application/json"],
-            "produces": ["application/json"],
-            "host": "esi.evetech.net",
-            "info": {},
-            "definitions": {},
-            "parameters": {},
-            "paths": {},
-            "schemes": ["https"],
-            "swagger": "2.0",
-        });
+        let spec: Spec = serde_json::from_str(r#"{"paths": {}}"#).unwrap();
         let b = EsiBuilder::new()
             .user_agent("d")
             .spec(Some(spec.clone()))
@@ -334,14 +324,14 @@ mod tests {
 
     #[test]
     fn test_builder_to_json_empty() {
-        let json = r#"{"version":null,"client_id":null,"client_secret":null,"application_auth":null,"callback_url":null,"base_api_url":null,"authorize_url":null,"token_url":null,"spec_url":null,"scope":null,"access_token":null,"access_expiration":null,"refresh_token":null,"user_agent":null,"http_timeout":null,"spec":null}"#;
+        let json = r#"{"compatibility_date":null,"client_id":null,"client_secret":null,"application_auth":null,"callback_url":null,"base_api_url":null,"authorize_url":null,"token_url":null,"spec_url":null,"scope":null,"access_token":null,"access_expiration":null,"refresh_token":null,"user_agent":null,"http_timeout":null,"spec":null}"#;
         assert_eq!(json, serde_json::to_string(&EsiBuilder::new()).unwrap());
     }
 
     #[test]
     fn test_builder_from_json_filled() {
         let json = r#"{
-            "version": "latest",
+            "compatibility_date": "2025-08-26",
             "client_id": "a",
             "client_secret": "b",
             "callback_url": "c",
@@ -355,7 +345,7 @@ mod tests {
           }"#;
         let actual: EsiBuilder = serde_json::from_str(json).unwrap();
         let expected = EsiBuilder::new()
-            .version("latest")
+            .compatibility_date("2025-08-26")
             .client_id("a")
             .client_secret("b")
             .callback_url("c")
