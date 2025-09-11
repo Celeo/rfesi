@@ -185,7 +185,6 @@ impl Esi {
             self.compatibility_date
         );
         self.assert_not_error_limited().await?;
-        dbg!(&self.spec_url); // FIXME
         let resp = self.client.get(&self.spec_url).send().await?;
         self.process_error_limit_headers(resp.headers()).await?;
         if !resp.status().is_success() {
@@ -644,7 +643,6 @@ impl Esi {
             .ok_or_else(|| EsiError::FailedSpecParse("Unwrapping JSON Value".to_owned()))?;
         for (path_str, path_obj) in data.paths.iter() {
             for method in path_obj.values() {
-                dbg!(&method.operation_id);
                 if method.operation_id == op_id {
                     // the paths contain a leading slash, so strip it
                     return Ok(path_str.chars().skip(1).collect());
