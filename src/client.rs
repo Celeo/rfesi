@@ -282,13 +282,9 @@ impl Esi {
     fn get_auth_headers(&self) -> EsiResult<HeaderMap> {
         self.check_client_info()?;
         let mut map = HeaderMap::new();
-        if self.client_secret.is_some() {
+        if let Some(ref secret) = self.client_secret {
             let value = base64
-                .encode(format!(
-                    "{}:{}",
-                    self.client_id.as_ref().unwrap(),
-                    self.client_secret.as_ref().unwrap()
-                ))
+                .encode(format!("{}:{secret}", self.client_id.as_ref().unwrap()))
                 .replace(['\n', ' '], "");
             map.insert(
                 header::AUTHORIZATION,
