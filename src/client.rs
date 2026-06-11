@@ -255,12 +255,11 @@ impl Esi {
         #[cfg(not(feature = "random_state"))]
         let state = "rfesi_unused".to_string();
         let mut url = format!(
-            "{}?response_type=code&redirect_uri={}&client_id={}&scope={}&state={}",
+            "{}?response_type=code&redirect_uri={}&client_id={}&scope={}&state={state}",
             self.authorize_url,
             self.callback_url.as_ref().unwrap(),
             self.client_id.as_ref().unwrap(),
-            self.scope,
-            &state
+            self.scope
         );
         let mut pkce_verifier = None;
         // PKCE can be theoretically combined with client secret, but not sure if ESI supports it
