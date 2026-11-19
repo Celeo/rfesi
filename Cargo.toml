@@ -32,7 +32,7 @@ dotenvy = "0.15"
 pretty_env_logger = "0.5"
 rusty-hook = "0.11"
 tokio = { version = "1.54", features = ["full"] }
-chrono = "0.4"
+jiff = { version = "1", default-features = false, features = ["std"] }
 uuid = { version = "1.29", features = ["v4", "fast-rng"] }
 
 [features]

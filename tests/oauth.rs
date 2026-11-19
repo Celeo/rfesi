@@ -211,9 +211,9 @@ async fn refreshing_posts_the_form_with_basic_credentials_and_stores_the_answer(
         .refresh_token(Some("old-refresh"))
         .build()
         .unwrap();
-    let before = chrono::Utc::now().timestamp_millis();
+    let before = jiff::Timestamp::now().as_millisecond();
     esi.refresh_access_token(None).await.unwrap();
-    let after = chrono::Utc::now().timestamp_millis();
+    let after = jiff::Timestamp::now().as_millisecond();
 
     let request = server.only();
     assert_eq!(request.method, "POST");
@@ -360,7 +360,7 @@ mod validated {
     impl Sso {
         /// The claims of an EVE SSO token; `expires_in` is seconds from now.
         fn claims(audience: &str, issuer: &str, expires_in: i64) -> serde_json::Value {
-            let now = chrono::Utc::now().timestamp();
+            let now = jiff::Timestamp::now().as_second();
             serde_json::json!({
                 "aud": [audience, "EVE Online"],
                 "azp": audience,

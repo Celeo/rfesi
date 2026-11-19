@@ -196,7 +196,7 @@ mod tests {
     fn test_jwt_validity_wrong_exp() {
         let header = Header::new(Algorithm::RS256);
         let (mut claim, client_id) = generate_valid_claims();
-        claim.exp = (chrono::Utc::now() - chrono::Duration::minutes(5)).timestamp();
+        claim.exp = (jiff::Timestamp::now() - jiff::SignedDuration::from_mins(5)).as_second();
         let (private_key, public_key) = load_key();
 
         let encoding_key = EncodingKey::from_rsa_pem(private_key.as_bytes()).unwrap();
@@ -239,13 +239,13 @@ mod tests {
 
     fn generate_valid_claims() -> (TokenClaims, String) {
         let client_id = String::from("client_id");
-        let issued = chrono::Utc::now();
-        let expiry = issued + chrono::Duration::minutes(5);
+        let issued = jiff::Timestamp::now();
+        let expiry = issued + jiff::SignedDuration::from_mins(5);
         let claim = TokenClaims {
             aud: vec![client_id.clone(), "EVE Online".to_string()],
             azp: client_id.clone(),
-            exp: expiry.timestamp(),
-            iat: issued.timestamp(),
+            exp: expiry.as_second(),
+            iat: issued.as_second(),
             iss: "https://login.eveonline.com".to_string(),
             jti: uuid::Uuid::new_v4().to_string(),
             kid: "JWT-Signature-Key".to_string(),

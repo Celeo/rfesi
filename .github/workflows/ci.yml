@@ -11,7 +11,7 @@ name: CI
 # what a consumer of the crate gets.
 on:
   pull_request:
-    branches: [master, dev]
+    branches: [master]
     paths-ignore:
       - "**.md"
   push:

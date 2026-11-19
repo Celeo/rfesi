@@ -32,7 +32,7 @@ impl Harness {
 
     /// A client that is signed in for another hour.
     fn signed_in(server: &Server) -> Esi {
-        let expiration = chrono::Utc::now().timestamp_millis() + 3_600_000;
+        let expiration = jiff::Timestamp::now().as_millisecond() + 3_600_000;
         Self::builder(server)
             .access_token(Some("the-token"))
             .access_expiration(Some(expiration))

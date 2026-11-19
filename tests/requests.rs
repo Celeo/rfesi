@@ -28,7 +28,7 @@ impl Harness {
 
     /// A client that is signed in for another hour.
     fn signed_in(server: &Server) -> Esi {
-        let expiration = chrono::Utc::now().timestamp_millis() + 3_600_000;
+        let expiration = jiff::Timestamp::now().as_millisecond() + 3_600_000;
         Self::builder(server)
             .access_token(Some("the-token"))
             .access_expiration(Some(expiration))
@@ -149,7 +149,7 @@ async fn a_token_without_an_expiration_is_sent_and_does_not_panic() {
 #[tokio::test]
 async fn an_expired_token_never_reaches_the_server() {
     let server = Server::start(Reply::json("[]")).await;
-    let expired = chrono::Utc::now().timestamp_millis() - 1_000;
+    let expired = jiff::Timestamp::now().as_millisecond() - 1_000;
     let esi = Harness::builder(&server)
         .access_token(Some("old"))
         .access_expiration(Some(expired))
