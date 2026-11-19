@@ -1,6 +1,6 @@
 [package]
 name = "esi-openapi"
-version = "0.3.0"
+version = "0.3.1"
 authors = ["Rafael <rafaga@users.noreply.github.com>", "Celeo <mattboulanger@fastmail.com>"]
 edition = "2021"
 description = "Rust API for EVE Online's ESI, based on the OpenAPI specification (fork of rfesi)"
